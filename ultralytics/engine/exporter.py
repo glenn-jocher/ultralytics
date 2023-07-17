@@ -560,7 +560,7 @@ class Exporter:
 
         return f, None
 
-    @try_export
+    #@try_export
     def export_saved_model(self, prefix=colorstr('TensorFlow SavedModel:')):
         """YOLOv8 TensorFlow SavedModel export."""
         try:
