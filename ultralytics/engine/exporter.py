@@ -602,6 +602,7 @@ class Exporter:
             f.unlink() if 'quant_with_int16_act.tflite' in str(f) else self._add_tflite_metadata(file)
 
         # Load saved_model
+        print('creating keras model from', f)
         keras_model = tf.saved_model.load(f, tags=None, options=None)
 
         return str(f), keras_model
