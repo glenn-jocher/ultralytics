@@ -22,7 +22,7 @@ on:
 
 jobs:
   docker:
-    if: github.repository == 'ultralytics/ultralytics'
+    # if: github.repository == 'ultralytics/ultralytics'
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     strategy:
@@ -65,22 +65,22 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: ${{ matrix.cfg.platforms }}
-          file: docker/${{ matrix.cfg.dockerfile }}
+          platforms: ${{ matrix.platforms }}
+          file: docker/${{ matrix.dockerfile }}
           push: false
           load: true
-          tags: ultralytics/ultralytics:${{ matrix.cfg.tags }}
+          tags: ultralytics/ultralytics:${{ matrix.tags }}
 
       - name: Run tests
-        if: matrix.cfg.image == 'Python'
+        if: matrix.image == 'Python'
         run: |
-          docker run ultralytics/ultralytics:${{ matrix.cfg.tags }} /bin/bash -c "pip install 'ultralytics[dev]' && pytest tests"
+          docker run ultralytics/ultralytics:${{ matrix.tags }} /bin/bash -c "pip install 'ultralytics[dev]' && pytest tests"
 
       - name: Push image
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: ${{ matrix.cfg.platforms }}
-          file: docker/${{ matrix.cfg.dockerfile }}
+          platforms: ${{ matrix.platforms }}
+          file: docker/${{ matrix.dockerfile }}
           push: false
-          tags: ultralytics/ultralytics:${{ matrix.cfg.tags }}
+          tags: ultralytics/ultralytics:${{ matrix.tags }}
