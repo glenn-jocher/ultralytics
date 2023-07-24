@@ -27,13 +27,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cfg: [
-          {dockerfile: "Dockerfile-arm64", platforms: "linux/arm64", tags: "latest-arm64", image: "Arm64"},
-          {dockerfile: "Dockerfile-jetson", platforms: "linux/arm64", tags: "latest-jetson", image: "Jetson"},
-          {dockerfile: "Dockerfile-python", platforms: "linux/amd64", tags: "latest-python", image: "Python"},
-          {dockerfile: "Dockerfile-cpu", platforms: "linux/amd64", tags: "latest-cpu", image: "CPU"},
-          {dockerfile: "Dockerfile", platforms: "linux/amd64", tags: "latest", image: "GPU"}
-        ]
+        dockerfile: ["Dockerfile"]
+        image: ["GPU"]
+        tags: ["latest"]
+        include:
+          - dockerfile: "Dockerfile-arm64"
+            image: "Arm64"
+            tags: "latest-arm64"
+            platforms: "linux/arm64"
+          - dockerfile: "Dockerfile-jetson"
+            image: "Jetson"
+            tags: "latest-jetson"
+            platforms: "linux/arm64"
+          - dockerfile: "Dockerfile-python"
+            image: "Python"
+            tags: "latest-python"
+          - dockerfile: "Dockerfile-cpu"
+            image: "CPU"
+            tags: "latest-cpu"
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
