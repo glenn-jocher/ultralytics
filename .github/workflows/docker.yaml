@@ -10,41 +10,38 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
-      image:
+      dockerfile:
         type: choice
-        description: Select Docker Image
+        description: Select Dockerfile
         options:
-          - Arm64
-          - Jetson
-          - Python
-          - CPU
-          - GPU
+          - Dockerfile-arm64
+          - Dockerfile-jetson
+          - Dockerfile-python
+          - Dockerfile-cpu
+          - Dockerfile
 
 jobs:
   docker:
-    # if: github.repository == 'ultralytics/ultralytics'
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dockerfile: ["Dockerfile"]
-        image: ["GPU"]
-        tags: ["latest"]
         include:
           - dockerfile: "Dockerfile-arm64"
-            image: "Arm64"
             tags: "latest-arm64"
             platforms: "linux/arm64"
           - dockerfile: "Dockerfile-jetson"
-            image: "Jetson"
             tags: "latest-jetson"
             platforms: "linux/arm64"
           - dockerfile: "Dockerfile-python"
-            image: "Python"
             tags: "latest-python"
+            platforms: "linux/amd64"
           - dockerfile: "Dockerfile-cpu"
-            image: "CPU"
             tags: "latest-cpu"
+            platforms: "linux/amd64"
+          - dockerfile: "Dockerfile"
+            tags: "latest"
+            platforms: "linux/amd64"
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -72,7 +69,7 @@ jobs:
           tags: ultralytics/ultralytics:${{ matrix.tags }}
 
       - name: Run tests
-        if: matrix.image == 'Python'
+        if: matrix.dockerfile == 'Dockerfile-python'
         run: |
           docker run ultralytics/ultralytics:${{ matrix.tags }} /bin/bash -c "pip install 'ultralytics[dev]' && pytest tests"
 
@@ -82,5 +79,5 @@ jobs:
           context: .
           platforms: ${{ matrix.platforms }}
           file: docker/${{ matrix.dockerfile }}
-          push: false
+          push: true
           tags: ultralytics/ultralytics:${{ matrix.tags }}
