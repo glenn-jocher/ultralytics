@@ -185,7 +185,13 @@ jobs:
         run: |
           from ultralytics import YOLO
           model = YOLO('yolov8n.pt')
-          results = model.train(data='coco8.yaml')
+          results = model.train(data='coco8.yaml', imgsz=160, epochs=1)
+      - name: Train a model 2
+        shell: python
+        run: |
+          from ultralytics import YOLO
+          model = YOLO('yolov8n.pt')
+          results = model.train(data='coco8.yaml', imgsz=160, epochs=1)
       - name: Pytest tests
         shell: bash  # for Windows compatibility
         run: pytest tests
