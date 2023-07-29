@@ -239,9 +239,12 @@ def check_det_dataset(dataset, autodownload=True):
                 data[k] = [str((path / x).resolve()) for x in data[k]]
 
     # Parse yaml
+    print(0, data)
     train, val, test, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
     if val:
+        print(1, val)
         val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
+        print(2, val)
         if not all(x.exists() for x in val):
             name = clean_url(dataset)  # dataset name with URL auth stripped
             m = f"\nDataset '{name}' images not found ⚠️, missing paths %s" % [str(x) for x in val if not x.exists()]
