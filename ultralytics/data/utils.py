@@ -203,8 +203,10 @@ def check_det_dataset(dataset, autodownload=True):
         extract_dir, autodownload = data.parent, False
 
     # Read yaml (optional)
+    print('STEP0\n', data)
     if isinstance(data, (str, Path)):
         data = yaml_load(data, append_filename=True)  # dictionary
+        print('STEP1\n', data)
 
     # Checks
     for k in 'train', 'val':
@@ -223,10 +225,15 @@ def check_det_dataset(dataset, autodownload=True):
     data['names'] = check_class_names(data['names'])
 
     # Resolve paths
+    print('STEP2\n', data)
     path = Path(extract_dir or data.get('path') or Path(data.get('yaml_file', '')).parent)  # dataset root
+    print('STEP3\n', path)
+
 
     if not path.is_absolute():
         path = (DATASETS_DIR / path).resolve()
+        print('STEP4\n', path)
+
     data['path'] = path  # download scripts
     for k in 'train', 'val', 'test':
         if data.get(k):  # prepend path
@@ -237,14 +244,13 @@ def check_det_dataset(dataset, autodownload=True):
                 data[k] = str(x)
             else:
                 data[k] = [str((path / x).resolve()) for x in data[k]]
+    print('STEP5\n', data)
 
     # Parse yaml
-    print(0, data)
     train, val, test, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
+    print('STEP6\n', val)
     if val:
-        print(1, val)
         val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
-        print(2, val)
         if not all(x.exists() for x in val):
             name = clean_url(dataset)  # dataset name with URL auth stripped
             m = f"\nDataset '{name}' images not found ⚠️, missing paths %s" % [str(x) for x in val if not x.exists()]
