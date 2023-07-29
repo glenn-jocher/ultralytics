@@ -180,6 +180,12 @@ jobs:
           python --version
           pip --version
           pip list
+      - name: Train a model
+        shell: python
+        run: |
+          from ultralytics import YOLO
+          model = YOLO('yolov8n.pt')
+          results = model.train(data='coco8.yaml')
       - name: Pytest tests
         shell: bash  # for Windows compatibility
         run: pytest tests
