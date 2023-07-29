@@ -273,6 +273,7 @@ def check_det_dataset(dataset, autodownload=True):
             LOGGER.info(f'Dataset download {s}\n')
     check_font('Arial.ttf' if is_ascii(data['names']) else 'Arial.Unicode.ttf')  # download fonts
 
+    print('STEP7\n', data)
     return data  # dictionary
 
 
