@@ -42,8 +42,8 @@ jobs:
       - name: Install Ultralytics package from conda-forge
         shell: bash
         run: |
-          conda install ultralytics # replace with the actual package name
-          conda install pytest
+          conda install ultralytics
+          conda install -c anaconda pytest
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
