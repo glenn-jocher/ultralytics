@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           conda install ultralytics
-          conda install -c anaconda pytest
+          pip install pytest
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
