@@ -43,8 +43,6 @@ jobs:
         shell: bash
         run: |
           conda install ultralytics
-          pip install pytest
-          
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
@@ -57,8 +55,11 @@ jobs:
           conda list
       - name: Run Tests with Conda Environment
         shell: bash
-        run: pytest tests # or any other test commands
-
+        run: |
+          yolo predict model=yolov8n.pt imgsz=320
+          yolo train model=yolov8n.pt data=coco8.yaml epochs=1 imgsz=32
+          yolo val model=yolov8n.pt data=coco8.yaml imgsz=32
+          yolo export model=yolov8n.pt format=torchscript imgsz=160
 
   HUB:
     if: github.repository == 'ultralytics/ultralytics' && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.hub == 'true'))
