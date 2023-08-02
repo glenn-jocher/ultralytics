@@ -33,13 +33,13 @@ jobs:
       matrix:
         python-version: ['3.11']
     steps:
-      - uses: actions/checkout@v3
       - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: test-environment
           auto-activate-base: false
-      - name: Install Ultralytics package and dependencies
+          channels: conda-forge
+      - name: Install Ultralytics package from conda-forge
         shell: bash
         run: |
           conda install ultralytics # replace with the actual package name
@@ -57,6 +57,7 @@ jobs:
       - name: Run Tests with Conda Environment
         shell: bash
         run: pytest tests # or any other test commands
+
 
   HUB:
     if: github.repository == 'ultralytics/ultralytics' && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.hub == 'true'))
