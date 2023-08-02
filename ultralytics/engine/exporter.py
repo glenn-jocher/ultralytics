@@ -19,7 +19,7 @@ PaddlePaddle            | `paddle`                  | yolov8n_paddle_model/
 ncnn                    | `ncnn`                    | yolov8n_ncnn_model/
 
 Requirements:
-    $ pip install ultralytics[export]
+    $ pip install "ultralytics[export]"
 
 Python:
     from ultralytics import YOLO
@@ -32,7 +32,7 @@ CLI:
 Inference:
     $ yolo predict model=yolov8n.pt                 # PyTorch
                          yolov8n.torchscript        # TorchScript
-                         yolov8n.onnx               # ONNX Runtime or OpenCV DNN with --dnn
+                         yolov8n.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
                          yolov8n_openvino_model     # OpenVINO
                          yolov8n.engine             # TensorRT
                          yolov8n.mlmodel            # CoreML (macOS-only)
@@ -177,7 +177,7 @@ class Exporter:
         im = torch.zeros(self.args.batch, 3, *self.imgsz).to(self.device)
         file = Path(
             getattr(model, 'pt_path', None) or getattr(model, 'yaml_file', None) or model.yaml.get('yaml_file', ''))
-        if file.suffix == '.yaml':
+        if file.suffix in ('.yaml', '.yml'):
             file = Path(file.name)
 
         # Update model

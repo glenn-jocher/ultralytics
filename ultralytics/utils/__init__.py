@@ -568,9 +568,10 @@ def get_user_config_dir(sub_dir='Ultralytics'):
         raise ValueError(f'Unsupported operating system: {platform.system()}')
 
     # GCP and AWS lambda fix, only /tmp is writeable
-    if not is_dir_writeable(str(path.parent)):
-        path = Path('/tmp') / sub_dir
-        LOGGER.warning(f"WARNING ⚠️ user config directory is not writeable, defaulting to '{path}'.")
+    if not is_dir_writeable(path.parent):
+        LOGGER.warning(f"WARNING ⚠️ user config directory '{path}' is not writeable, defaulting to '/tmp' or CWD."
+                       'Alternatively you can define a YOLO_CONFIG_DIR environment variable for this path.')
+        path = Path('/tmp') / sub_dir if is_dir_writeable('/tmp') else Path().cwd() / sub_dir
 
     # Create the subdirectory if it does not exist
     path.mkdir(parents=True, exist_ok=True)
@@ -578,7 +579,7 @@ def get_user_config_dir(sub_dir='Ultralytics'):
     return path
 
 
-USER_CONFIG_DIR = Path(os.getenv('YOLO_CONFIG_DIR', get_user_config_dir()))  # Ultralytics settings dir
+USER_CONFIG_DIR = Path(os.getenv('YOLO_CONFIG_DIR') or get_user_config_dir())  # Ultralytics settings dir
 SETTINGS_YAML = USER_CONFIG_DIR / 'settings.yaml'
 
 
@@ -713,24 +714,6 @@ def set_sentry():
             logging.getLogger(logger).setLevel(logging.CRITICAL)
 
 
-def update_dict_recursive(d, u):
-    """
-    Recursively updates the dictionary `d` with the key-value pairs from the dictionary `u` without overwriting
-    entire sub-dictionaries. Note that function recursion is intended and not a problem, as this allows for updating
-    nested dictionaries at any arbitrary depth.
-
-    Args:
-        d (dict): The dictionary to be updated.
-        u (dict): The dictionary to update `d` with.
-
-    Returns:
-        (dict): The recursively updated dictionary.
-    """
-    for k, v in u.items():
-        d[k] = update_dict_recursive(d.get(k, {}), v) if isinstance(v, dict) else v
-    return d
-
-
 class SettingsManager(dict):
     """
     Manages Ultralytics settings stored in a YAML file.
@@ -791,20 +774,15 @@ class SettingsManager(dict):
 
     def load(self):
         """Loads settings from the YAML file."""
-        self.update(yaml_load(self.file))
+        super().update(yaml_load(self.file))
 
     def save(self):
         """Saves the current settings to the YAML file."""
         yaml_save(self.file, dict(self))
 
     def update(self, *args, **kwargs):
-        """Updates a setting value in the current settings and saves the settings."""
-        new = dict(*args, **kwargs)
-        if any(isinstance(v, dict) for v in new.values()):
-            update_dict_recursive(self, new)
-        else:
-            # super().update(*args, **kwargs)
-            super().update(new)
+        """Updates a setting value in the current settings."""
+        super().update(*args, **kwargs)
         self.save()
 
     def reset(self):
