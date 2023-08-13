@@ -5,11 +5,15 @@ on:
   issue_comment:
     types:
       - created
+    branches:
+        - main
   pull_request_target:
     types:
       - reopened
       - opened
       - synchronize
+    branches:
+        - main
 
 jobs:
   CLA:
