@@ -26,7 +26,6 @@ from ultralytics import __version__
 # PyTorch Multi-GPU DDP Constants
 RANK = int(os.getenv('RANK', -1))
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
-WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 # Other Constants
 FILE = Path(__file__).resolve()
@@ -329,7 +328,10 @@ def yaml_load(file='data.yaml', append_filename=False):
             s = re.sub(r'[^\x09\x0A\x0D\x20-\x7E\x85\xA0-\uD7FF\uE000-\uFFFD\U00010000-\U0010ffff]+', '', s)
 
         # Add YAML filename to dict and return
-        return {**yaml.safe_load(s), 'yaml_file': str(file)} if append_filename else yaml.safe_load(s)
+        data = yaml.safe_load(s) or {}  # always return a dict (yaml.safe_load() may return None for empty files)
+        if append_filename:
+            data['yaml_file'] = str(file)
+        return data
 
 
 def yaml_print(yaml_file: Union[str, Path, dict]) -> None:
@@ -354,6 +356,19 @@ for k, v in DEFAULT_CFG_DICT.items():
         DEFAULT_CFG_DICT[k] = None
 DEFAULT_CFG_KEYS = DEFAULT_CFG_DICT.keys()
 DEFAULT_CFG = IterableSimpleNamespace(**DEFAULT_CFG_DICT)
+
+
+def is_ubuntu() -> bool:
+    """
+    Check if the OS is Ubuntu.
+
+    Returns:
+        (bool): True if OS is Ubuntu, False otherwise.
+    """
+    with contextlib.suppress(FileNotFoundError):
+        with open('/etc/os-release') as f:
+            return 'ID=ubuntu' in f.read()
+    return False
 
 
 def is_colab():
@@ -545,6 +560,19 @@ def get_default_args(func):
     """
     signature = inspect.signature(func)
     return {k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty}
+
+
+def get_ubuntu_version():
+    """
+    Retrieve the Ubuntu version if the OS is Ubuntu.
+
+    Returns:
+        (str): Ubuntu version or None if not an Ubuntu OS.
+    """
+    with contextlib.suppress(FileNotFoundError, AttributeError):
+        with open('/etc/os-release') as f:
+            return re.search(r'VERSION_ID="(\d+\.\d+)"', f.read())[1]
+    return None
 
 
 def get_user_config_dir(sub_dir='Ultralytics'):
@@ -762,7 +790,7 @@ class SettingsManager(dict):
 
             self.load()
             correct_keys = self.keys() == self.defaults.keys()
-            correct_types = all(type(a) == type(b) for a, b in zip(self.values(), self.defaults.values()))
+            correct_types = all(type(a) is type(b) for a, b in zip(self.values(), self.defaults.values()))
             correct_version = check_version(self['settings_version'], self.version)
             if not (correct_keys and correct_types and correct_version):
                 LOGGER.warning(

@@ -1,4 +1,5 @@
-# Ultralytics YOLO 🚀, GPL-3.0 license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+
 import os
 
 import pkg_resources as pkg
@@ -123,7 +124,7 @@ def on_train_end(trainer):
         _log_confusion_matrix(trainer.validator)
 
         if trainer.best.exists():
-            live.log_artifact(trainer.best, copy=True)
+            live.log_artifact(trainer.best, copy=True, type='model')
 
         live.end()
 

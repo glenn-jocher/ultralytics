@@ -2,7 +2,6 @@
 #include <regex>
 
 #define benchmark
-#define ELOG
 
 DCSP_CORE::DCSP_CORE()
 {
@@ -13,6 +12,13 @@ DCSP_CORE::DCSP_CORE()
 DCSP_CORE::~DCSP_CORE()
 {
 	delete session;
+}
+
+
+namespace Ort
+{
+	template<>
+	struct TypeToTensorType<half> { static constexpr ONNXTensorElementDataType type = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16; };
 }
 
 
@@ -29,7 +35,7 @@ char* BlobFromImage(cv::Mat& iImg, T& iBlob)
 		{
 			for (int w = 0; w < imgWidth; w++)
 			{
-				iBlob[c * imgWidth * imgHeight + h * imgWidth + w] = (std::remove_pointer<T>::type)((iImg.at<cv::Vec3b>(h, w)[c]) / 255.0f);
+				iBlob[c * imgWidth * imgHeight + h * imgWidth + w] = typename std::remove_pointer<T>::type((iImg.at<cv::Vec3b>(h, w)[c]) / 255.0f);
 			}
 		}
 	}
@@ -40,8 +46,8 @@ char* BlobFromImage(cv::Mat& iImg, T& iBlob)
 char* PostProcess(cv::Mat& iImg, std::vector<int> iImgSize, cv::Mat& oImg)
 {
 	cv::Mat img = iImg.clone();
-	cv::resize(iImg, oImg, cv::Size(iImgSize.at(0), iImgSize.at(1)));
-	if (img.channels() == 1)
+    cv::resize(iImg, oImg, cv::Size(iImgSize.at(0), iImgSize.at(1)));
+    if (img.channels() == 1)
 	{
 		cv::cvtColor(oImg, oImg, cv::COLOR_GRAY2BGR);
 	}
@@ -57,7 +63,7 @@ char* DCSP_CORE::CreateSession(DCSP_INIT_PARAM &iParams)
 	bool result = std::regex_search(iParams.ModelPath, pattern);
 	if (result)
 	{
-		Ret = "[DCSP_ONNX]:model path error.change your model path without chinese characters.";
+		Ret = "[DCSP_ONNX]:Model path error.Change your model path without chinese characters.";
 		std::cout << Ret << std::endl;
 		return Ret;
 	}
@@ -75,17 +81,21 @@ char* DCSP_CORE::CreateSession(DCSP_INIT_PARAM &iParams)
 			OrtCUDAProviderOptions cudaOption;
 			cudaOption.device_id = 0;
 			sessionOption.AppendExecutionProvider_CUDA(cudaOption);
-			//OrtOpenVINOProviderOptions ovOption;
-			//sessionOption.AppendExecutionProvider_OpenVINO(ovOption);
 		}
 		sessionOption.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
 		sessionOption.SetIntraOpNumThreads(iParams.IntraOpNumThreads);
 		sessionOption.SetLogSeverityLevel(iParams.LogSeverityLevel);
+
+#ifdef _WIN32
 		int ModelPathSize = MultiByteToWideChar(CP_UTF8, 0, iParams.ModelPath.c_str(), static_cast<int>(iParams.ModelPath.length()), nullptr, 0);
 		wchar_t* wide_cstr = new wchar_t[ModelPathSize + 1];
 		MultiByteToWideChar(CP_UTF8, 0, iParams.ModelPath.c_str(), static_cast<int>(iParams.ModelPath.length()), wide_cstr, ModelPathSize);
 		wide_cstr[ModelPathSize] = L'\0';
 		const wchar_t* modelPath = wide_cstr;
+#else
+		const char* modelPath = iParams.ModelPath.c_str();
+#endif // _WIN32
+
 		session = new Ort::Session(env, modelPath, sessionOption);
 		Ort::AllocatorWithDefaultOptions allocator;
 		size_t inputNodesNum = session->GetInputCount();
@@ -96,7 +106,6 @@ char* DCSP_CORE::CreateSession(DCSP_INIT_PARAM &iParams)
 			strcpy(temp_buf, input_node_name.get());
 			inputNodeNames.push_back(temp_buf);
 		}
-
 		size_t OutputNodesNum = session->GetOutputCount();
 		for (size_t i = 0; i < OutputNodesNum; i++)
 		{
@@ -107,9 +116,7 @@ char* DCSP_CORE::CreateSession(DCSP_INIT_PARAM &iParams)
 		}
 		options = Ort::RunOptions{ nullptr };
 		WarmUpSession();
-		//std::cout << OrtGetApiBase()->GetVersionString() << std::endl;;
-		Ret = RET_OK;
-		return Ret;
+		return RET_OK;
 	}
 	catch (const std::exception& e)
 	{
@@ -120,7 +127,6 @@ char* DCSP_CORE::CreateSession(DCSP_INIT_PARAM &iParams)
 		std::strcpy(merged, result.c_str());
 		std::cout << merged << std::endl;
 		delete[] merged;
-		//return merged;
 		return "[DCSP_ONNX]:Create session failed.";
 	}
 
@@ -143,6 +149,13 @@ char* DCSP_CORE::RunSession(cv::Mat &iImg, std::vector<DCSP_RESULT>& oResult)
 		std::vector<int64_t> inputNodeDims = { 1,3,imgSize.at(0),imgSize.at(1) };
 		TensorProcess(starttime_1, iImg, blob, inputNodeDims, oResult);
 	}
+	else
+	{
+		half* blob = new half[processedImg.total() * 3];
+		BlobFromImage(processedImg, blob);
+		std::vector<int64_t> inputNodeDims = { 1,3,imgSize.at(0),imgSize.at(1) };
+		TensorProcess(starttime_1, iImg, blob, inputNodeDims, oResult);
+	}
 
 	return Ret;
 }
@@ -151,7 +164,7 @@ char* DCSP_CORE::RunSession(cv::Mat &iImg, std::vector<DCSP_RESULT>& oResult)
 template<typename N>
 char* DCSP_CORE::TensorProcess(clock_t& starttime_1, cv::Mat& iImg, N& blob, std::vector<int64_t>& inputNodeDims,  std::vector<DCSP_RESULT>& oResult)
 {
-	Ort::Value inputTensor = Ort::Value::CreateTensor<std::remove_pointer<N>::type>(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU), blob, 3 * imgSize.at(0) * imgSize.at(1), inputNodeDims.data(), inputNodeDims.size());
+    Ort::Value inputTensor = Ort::Value::CreateTensor<typename std::remove_pointer<N>::type>(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU), blob, 3 * imgSize.at(0) * imgSize.at(1), inputNodeDims.data(), inputNodeDims.size());
 #ifdef benchmark
 	clock_t starttime_2 = clock();
 #endif // benchmark
@@ -159,14 +172,16 @@ char* DCSP_CORE::TensorProcess(clock_t& starttime_1, cv::Mat& iImg, N& blob, std
 #ifdef benchmark
 	clock_t starttime_3 = clock();
 #endif // benchmark
+
 	Ort::TypeInfo typeInfo = outputTensor.front().GetTypeInfo();
 	auto tensor_info = typeInfo.GetTensorTypeAndShapeInfo();
 	std::vector<int64_t>outputNodeDims = tensor_info.GetShape();
-	std::remove_pointer<N>::type* output = outputTensor.front().GetTensorMutableData<std::remove_pointer<N>::type>();
+    auto output = outputTensor.front().GetTensorMutableData<typename std::remove_pointer<N>::type>();
 	delete blob;
 	switch (modelType)
 	{
-	case 1:
+	case 1://V8_ORIGIN_FP32
+	case 4://V8_ORIGIN_FP16
 	{
 		int strideNum = outputNodeDims[2];
 		int signalResultNum = outputNodeDims[1];
@@ -183,7 +198,7 @@ char* DCSP_CORE::TensorProcess(clock_t& starttime_1, cv::Mat& iImg, N& blob, std
 		for (int i = 0; i < strideNum; ++i)
 		{
 			float* classesScores = data + 4;
-			cv::Mat scores(1, classesNum, CV_32FC1, classesScores);
+			cv::Mat scores(1, this->classes.size(), CV_32FC1, classesScores);
 			cv::Point class_id;
 			double maxClassScore;
 			cv::minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
@@ -203,13 +218,14 @@ char* DCSP_CORE::TensorProcess(clock_t& starttime_1, cv::Mat& iImg, N& blob, std
 				int width = int(w * x_factor);
 				int height = int(h * y_factor);
 
-				boxes.push_back(cv::Rect(left, top, width, height));
+				boxes.emplace_back(left, top, width, height);
 			}
 			data += signalResultNum;
 		}
 
 		std::vector<int> nmsResult;
 		cv::dnn::NMSBoxes(boxes, confidences, rectConfidenceThreshold, iouThreshold, nmsResult);
+
 		for (int i = 0; i < nmsResult.size(); ++i)
 		{
 			int idx = nmsResult[i];
@@ -239,15 +255,13 @@ char* DCSP_CORE::TensorProcess(clock_t& starttime_1, cv::Mat& iImg, N& blob, std
 		break;
 	}
 	}
-	char* Ret = RET_OK;
-	return Ret;
+	return RET_OK;
 }
 
 
 char* DCSP_CORE::WarmUpSession()
 {
 	clock_t starttime_1 = clock();
-	char* Ret = RET_OK;
 	cv::Mat iImg = cv::Mat(cv::Size(imgSize.at(0), imgSize.at(1)), CV_8UC3);
 	cv::Mat processedImg;
 	PostProcess(iImg, imgSize, processedImg);
@@ -266,6 +280,20 @@ char* DCSP_CORE::WarmUpSession()
 			std::cout << "[DCSP_ONNX(CUDA)]: " << "Cuda warm-up cost " << post_process_time << " ms. " << std::endl;
 		}
 	}
-
-	return Ret;
+	else
+	{
+		half* blob = new half[iImg.total() * 3];
+		BlobFromImage(processedImg, blob);
+		std::vector<int64_t> YOLO_input_node_dims = { 1,3,imgSize.at(0),imgSize.at(1) };
+		Ort::Value input_tensor = Ort::Value::CreateTensor<half>(Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU), blob, 3 * imgSize.at(0) * imgSize.at(1), YOLO_input_node_dims.data(), YOLO_input_node_dims.size());
+		auto output_tensors = session->Run(options, inputNodeNames.data(), &input_tensor, 1, outputNodeNames.data(), outputNodeNames.size());
+		delete[] blob;
+		clock_t starttime_4 = clock();
+		double post_process_time = (double)(starttime_4 - starttime_1) / CLOCKS_PER_SEC * 1000;
+		if (cudaEnable)
+		{
+			std::cout << "[DCSP_ONNX(CUDA)]: " << "Cuda warm-up cost " << post_process_time << " ms. " << std::endl;
+		}
+	}
+	return RET_OK;
 }

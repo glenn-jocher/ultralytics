@@ -31,8 +31,9 @@ Train YOLOv8n on the COCO128 dataset for 100 epochs at image size 640. See Argum
         model = YOLO('yolov8n.yaml').load('yolov8n.pt')  # build from YAML and transfer weights
 
         # Train the model
-        model.train(data='coco128.yaml', epochs=100, imgsz=640)
+        results = model.train(data='coco128.yaml', epochs=100, imgsz=640)
         ```
+
     === "CLI"
 
         ```bash
@@ -61,8 +62,9 @@ The training device can be specified using the `device` argument. If no argument
         model = YOLO('yolov8n.pt')  # load a pretrained model (recommended for training)
 
         # Train the model with 2 GPUs
-        model.train(data='coco128.yaml', epochs=100, imgsz=640, device=[0, 1])
+        results = model.train(data='coco128.yaml', epochs=100, imgsz=640, device=[0, 1])
         ```
+
     === "CLI"
 
         ```bash
@@ -87,8 +89,9 @@ To enable training on Apple M1 and M2 chips, you should specify 'mps' as your de
         model = YOLO('yolov8n.pt')  # load a pretrained model (recommended for training)
 
         # Train the model with 2 GPUs
-        model.train(data='coco128.yaml', epochs=100, imgsz=640, device='mps')
+        results = model.train(data='coco128.yaml', epochs=100, imgsz=640, device='mps')
         ```
+
     === "CLI"
 
         ```bash
@@ -119,8 +122,9 @@ Below is an example of how to resume an interrupted training using Python and vi
         model = YOLO('path/to/last.pt')  # load a partially trained model
 
         # Resume training
-        model.train(resume=True)
+        results = model.train(resume=True)
         ```
+
     === "CLI"
 
         ```bash
@@ -160,7 +164,7 @@ Training settings for YOLO models refer to the various hyperparameters and confi
 | `single_cls`      | `False`  | train multi-class data as single-class                                            |
 | `rect`            | `False`  | rectangular training with each batch collated for minimum padding                 |
 | `cos_lr`          | `False`  | use cosine learning rate scheduler                                                |
-| `close_mosaic`    | `0`      | (int) disable mosaic augmentation for final epochs                                |
+| `close_mosaic`    | `10`     | (int) disable mosaic augmentation for final epochs (0 to disable)                 |
 | `resume`          | `False`  | resume training from last checkpoint                                              |
 | `amp`             | `True`   | Automatic Mixed Precision (AMP) training, choices=[True, False]                   |
 | `fraction`        | `1.0`    | dataset fraction to train on (default is 1.0, all images in train set)            |
@@ -196,12 +200,15 @@ To use a logger, select it from the dropdown menu in the code snippet above and 
 
 To use Comet:
 
-```python
-# pip install comet_ml
-import comet_ml
+!!! example ""
 
-comet_ml.init()
-```
+    === "Python"
+        ```python
+        # pip install comet_ml
+        import comet_ml
+        
+        comet_ml.init()
+        ```
 
 Remember to sign in to your Comet account on their website and get your API key. You will need to add this to your environment variables or your script to log your experiments.
 
@@ -211,12 +218,15 @@ Remember to sign in to your Comet account on their website and get your API key.
 
 To use ClearML:
 
-```python
-# pip install clearml
-import clearml
+!!! example ""
 
-clearml.browser_login()
-```
+    === "Python"
+        ```python
+        # pip install clearml
+        import clearml
+        
+        clearml.browser_login()
+        ```
 
 After running this script, you will need to sign in to your ClearML account on the browser and authenticate your session.
 
@@ -226,16 +236,22 @@ After running this script, you will need to sign in to your ClearML account on t
 
 To use TensorBoard in [Google Colab](https://colab.research.google.com/github/ultralytics/ultralytics/blob/main/examples/tutorial.ipynb):
 
-```bash
-load_ext tensorboard
-tensorboard --logdir ultralytics/runs  # replace with 'runs' directory
-```
+!!! example ""
+
+    === "CLI"
+        ```bash
+        load_ext tensorboard
+        tensorboard --logdir ultralytics/runs  # replace with 'runs' directory
+        ```
 
 To use TensorBoard locally run the below command and view results at http://localhost:6006/.
 
-```bash
-tensorboard --logdir ultralytics/runs  # replace with 'runs' directory
-```
+!!! example ""
+
+    === "CLI"
+        ```bash
+        tensorboard --logdir ultralytics/runs  # replace with 'runs' directory
+        ```
 
 This will load TensorBoard and direct it to the directory where your training logs are saved.
 

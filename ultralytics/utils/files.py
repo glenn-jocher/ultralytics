@@ -22,7 +22,7 @@ class WorkingDirectory(contextlib.ContextDecorator):
         """Changes the current directory to the specified directory."""
         os.chdir(self.dir)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa
         """Restore the current working directory on context exit."""
         os.chdir(self.cwd)
 
@@ -40,9 +40,11 @@ def spaces_in_path(path):
     Yields:
         (Path): Temporary path with spaces replaced by underscores if spaces were present, otherwise the original path.
 
-    Examples:
+    Example:
+        ```python
         with spaces_in_path('/path/with spaces') as new_path:
             # your code here
+        ```
     """
 
     # If path has spaces, replace them with underscores
