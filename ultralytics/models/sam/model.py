@@ -28,7 +28,7 @@ class SAM(Model):
     def predict(self, source, stream=False, bboxes=None, points=None, labels=None, **kwargs):
         """Predicts and returns segmentation masks for given image or video source."""
         overrides = dict(conf=0.25, task='segment', mode='predict', imgsz=1024)
-        kwargs.update(overrides)
+        kwargs |= overrides
         prompts = dict(bboxes=bboxes, points=points, labels=labels)
         return super().predict(source, stream, prompts=prompts, **kwargs)
 

@@ -29,8 +29,7 @@ def _log_debug_samples(files, title='Debug Samples') -> None:
         files (list): A list of file paths in PosixPath format.
         title (str): A title that groups together images with the same values.
     """
-    task = Task.current_task()
-    if task:
+    if task := Task.current_task():
         for f in files:
             if f.exists():
                 it = re.search(r'_batch(\d+)', f.name)
@@ -86,9 +85,7 @@ def on_pretrain_routine_start(trainer):
 
 
 def on_train_epoch_end(trainer):
-    task = Task.current_task()
-
-    if task:
+    if task := Task.current_task():
         """Logs debug samples for the first epoch of YOLO training."""
         if trainer.epoch == 1:
             _log_debug_samples(sorted(trainer.save_dir.glob('train_batch*.jpg')), 'Mosaic')
@@ -99,8 +96,7 @@ def on_train_epoch_end(trainer):
 
 def on_fit_epoch_end(trainer):
     """Reports model information to logger at the end of an epoch."""
-    task = Task.current_task()
-    if task:
+    if task := Task.current_task():
         # You should have access to the validation bboxes under jdict
         task.get_logger().report_scalar(title='Epoch Time',
                                         series='Epoch Time',
@@ -120,8 +116,7 @@ def on_val_end(validator):
 
 def on_train_end(trainer):
     """Logs final model and its name on training completion."""
-    task = Task.current_task()
-    if task:
+    if task := Task.current_task():
         # Log final results, CM matrix + PR plots
         files = [
             'results.png', 'confusion_matrix.png', 'confusion_matrix_normalized.png',

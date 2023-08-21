@@ -158,7 +158,7 @@ class HUBTrainingSession:
         # url = 'http://httpbin.org/post'  # for debug
         data = {'epoch': epoch}
         if final:
-            data.update({'type': 'final', 'map': map})
+            data |= {'type': 'final', 'map': map}
             smart_request('post',
                           url,
                           data=data,
@@ -170,7 +170,7 @@ class HUBTrainingSession:
                           progress=True,
                           code=4)
         else:
-            data.update({'type': 'epoch', 'isBest': bool(is_best)})
+            data |= {'type': 'epoch', 'isBest': bool(is_best)}
             smart_request('post', url, data=data, files={'last.pt': file}, headers=self.auth_header, code=3)
 
     @threaded

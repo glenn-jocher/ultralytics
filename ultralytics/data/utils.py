@@ -49,8 +49,7 @@ def exif_size(img: Image.Image):
     s = img.size  # (width, height)
     if img.format == 'JPEG':  # only support JPEG images
         with contextlib.suppress(Exception):
-            exif = img.getexif()
-            if exif:
+            if exif := img.getexif():
                 rotation = exif.get(274, None)  # the EXIF key for the orientation tag is 274
                 if rotation in [6, 8]:  # rotation 270 or 90
                     s = s[1], s[0]
@@ -87,8 +86,7 @@ def verify_image_label(args):
                     segments = [np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in lb]  # (cls, xy1...)
                     lb = np.concatenate((classes.reshape(-1, 1), segments2boxes(segments)), 1)  # (cls, xywh)
                 lb = np.array(lb, dtype=np.float32)
-            nl = len(lb)
-            if nl:
+            if nl := len(lb):
                 if keypoint:
                     assert lb.shape[1] == (5 + nkpt * ndim), f'labels require {(5 + nkpt * ndim)} columns each'
                     assert (lb[:, 5::ndim] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
@@ -211,12 +209,11 @@ def check_det_dataset(dataset, autodownload=True):
     # Checks
     for k in 'train', 'val':
         if k not in data:
-            if k == 'val' and 'validation' in data:
-                LOGGER.info("WARNING ⚠️ renaming data YAML 'validation' key to 'val' to match YOLO format.")
-                data['val'] = data.pop('validation')  # replace 'validation' key with 'val' key
-            else:
+            if k != 'val' or 'validation' not in data:
                 raise SyntaxError(
                     emojis(f"{dataset} '{k}:' key missing ❌.\n'train' and 'val' are required in all data YAMLs."))
+            LOGGER.info("WARNING ⚠️ renaming data YAML 'validation' key to 'val' to match YOLO format.")
+            data['val'] = data.pop('validation')  # replace 'validation' key with 'val' key
     if 'names' not in data and 'nc' not in data:
         raise SyntaxError(emojis(f"{dataset} key missing ❌.\n either 'names' or 'nc' are required in all data YAMLs."))
     if 'names' in data and 'nc' in data and len(data['names']) != data['nc']:
@@ -321,12 +318,12 @@ def check_cls_dataset(dataset: str, split=''):
     # Print to console
     for k, v in {'train': train_set, 'val': val_set, 'test': test_set}.items():
         if v is None:
-            LOGGER.info(colorstr(k) + f': {v}')
+            LOGGER.info(f'{colorstr(k)}: {v}')
         else:
             files = [path for path in v.rglob('*.*') if path.suffix[1:].lower() in IMG_FORMATS]
             nf = len(files)  # number of files
             nd = len({file.parent for file in files})  # number of directories
-            LOGGER.info(colorstr(k) + f': {v}... found {nf} images in {nd} classes ✅ ')  # keep trailing space
+            LOGGER.info(f'{colorstr(k)}: {v}... found {nf} images in {nd} classes ✅ ')
 
     return {'train': train_set, 'val': val_set or test_set, 'test': test_set or val_set, 'nc': nc, 'names': names}
 

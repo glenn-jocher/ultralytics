@@ -201,8 +201,6 @@ class BasePredictor:
     def predict_cli(self, source=None, model=None):
         """Method used for CLI prediction. It uses always generator as outputs as not required by CLI mode."""
         gen = self.stream_inference(source, model)
-        for _ in gen:  # running CLI inference without accumulating any outputs (do not modify)
-            pass
 
     def setup_source(self, source):
         """Sets up source and inference mode."""

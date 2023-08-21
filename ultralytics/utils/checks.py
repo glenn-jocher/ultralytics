@@ -278,8 +278,7 @@ def check_requirements(requirements=ROOT.parent / 'requirements.txt', exclude=()
         except pkg.VersionConflict:
             pkgs.append(r)
 
-    s = ' '.join(f'"{x}"' for x in pkgs)  # console string
-    if s:
+    if s := ' '.join(f'"{x}"' for x in pkgs):
         if install and AUTOINSTALL:  # check environment variable
             n = len(pkgs)  # number of packages updates
             LOGGER.info(f"{prefix} Ultralytics requirement{'s' * (n > 1)} {pkgs} not found, attempting AutoUpdate...")

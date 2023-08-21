@@ -179,7 +179,7 @@ class Exporter:
         im = torch.zeros(self.args.batch, 3, *self.imgsz).to(self.device)
         file = Path(
             getattr(model, 'pt_path', None) or getattr(model, 'yaml_file', None) or model.yaml.get('yaml_file', ''))
-        if file.suffix in ('.yaml', '.yml'):
+        if file.suffix in {'.yaml', '.yml'}:
             file = Path(file.name)
 
         # Update model
@@ -214,7 +214,7 @@ class Exporter:
         self.model = model
         self.file = file
         self.output_shape = tuple(y.shape) if isinstance(y, torch.Tensor) else \
-            tuple(tuple(x.shape if isinstance(x, torch.Tensor) else []) for x in y)
+                tuple(tuple(x.shape if isinstance(x, torch.Tensor) else []) for x in y)
         self.pretty_name = Path(self.model.yaml.get('yaml_file', self.file)).stem.replace('yolo', 'YOLO')
         data = model.args['data'] if hasattr(model, 'args') and isinstance(model.args, dict) else ''
         description = f'Ultralytics {self.pretty_name} model {f"trained on {data}" if data else ""}'
@@ -269,7 +269,7 @@ class Exporter:
             f = str(Path(f[-1]))
             square = self.imgsz[0] == self.imgsz[1]
             s = '' if square else f"WARNING ⚠️ non-PyTorch val requires square images, 'imgsz={self.imgsz}' will not " \
-                                  f"work. Use export 'imgsz={max(self.imgsz)}' if val is required."
+                                      f"work. Use export 'imgsz={max(self.imgsz)}' if val is required."
             imgsz = self.imgsz[0] if square else str(self.imgsz)[1:-1].replace(' ', '')
             predict_data = f'data={data}' if model.task == 'segment' and format == 'pb' else ''
             LOGGER.info(f'\nExport complete ({time.time() - t:.1f}s)'
@@ -756,7 +756,7 @@ class Exporter:
             LOGGER.info(f"{prefix} running '{cmd}'")
             subprocess.run(cmd, shell=True)
 
-        if ' ' in str(f):
+        if ' ' in f:
             LOGGER.warning(f"{prefix} WARNING ⚠️ your model may not work correctly with spaces in path '{f}'.")
 
         # f_json = Path(f) / 'model.json'  # *.json path
