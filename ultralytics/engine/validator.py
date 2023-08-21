@@ -1,6 +1,6 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
 """
-Check a model's accuracy on a test or val split of a dataset
+Check a model's accuracy on a test or val split of a dataset.
 
 Usage:
     $ yolo mode=val model=yolov8n.pt data=coco128.yaml imgsz=640
@@ -303,7 +303,8 @@ class BaseValidator:
 
     def on_plot(self, name, data=None):
         """Registers plots (e.g. to be consumed in callbacks)"""
-        self.plots[name] = {'data': data, 'timestamp': time.time()}
+        path = Path(name)
+        self.plots[path] = {'data': data, 'timestamp': time.time()}
 
     # TODO: may need to put these following functions into callback
     def plot_val_samples(self, batch, ni):
