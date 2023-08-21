@@ -605,3 +605,5 @@ class Probs(BaseTensor):
     def top5conf(self):
         """Return the confidences of top 5."""
         return self.data[self.top5]
+
+

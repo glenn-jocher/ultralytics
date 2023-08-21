@@ -124,3 +124,5 @@ def fuse_score(cost_matrix, detections):
     det_scores = np.expand_dims(det_scores, axis=0).repeat(cost_matrix.shape[0], axis=0)
     fuse_sim = iou_sim * det_scores
     return 1 - fuse_sim  # fuse_cost
+
+

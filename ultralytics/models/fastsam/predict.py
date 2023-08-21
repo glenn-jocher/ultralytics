@@ -51,3 +51,5 @@ class FastSAMPredictor(DetectionPredictor):
             results.append(
                 Results(orig_img=orig_img, path=img_path, names=self.model.names, boxes=pred[:, :6], masks=masks))
         return results
+
+

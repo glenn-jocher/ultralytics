@@ -49,3 +49,5 @@ class SAM(Model):
     @property
     def task_map(self):
         return {'segment': {'predictor': Predictor}}
+
+

@@ -46,3 +46,5 @@ class ClassificationPredictor(BasePredictor):
             results.append(Results(orig_img=orig_img, path=img_path, names=self.model.names, probs=pred))
 
         return results
+
+

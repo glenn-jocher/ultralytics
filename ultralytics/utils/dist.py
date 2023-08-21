@@ -65,3 +65,5 @@ def ddp_cleanup(trainer, file):
     """Delete temp file if created."""
     if f'{id(trainer)}.py' in file:  # if temp_file suffix in file
         os.remove(file)
+
+

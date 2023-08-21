@@ -258,3 +258,5 @@ def inverse_sigmoid(x, eps=1e-6):
     """Inverse sigmoid function."""
     x = x.clip(min=0., max=1.)
     return torch.log(x / (1 - x + eps) + eps)
+
+

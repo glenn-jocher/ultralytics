@@ -318,3 +318,5 @@ class FastSAMPrompt:
 
     def everything_prompt(self):
         return self.results[0].masks.data
+
+

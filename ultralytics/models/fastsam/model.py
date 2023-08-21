@@ -31,3 +31,5 @@ class FastSAM(Model):
     @property
     def task_map(self):
         return {'segment': {'predictor': FastSAMPredictor, 'validator': FastSAMValidator}}
+
+

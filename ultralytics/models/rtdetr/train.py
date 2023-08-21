@@ -70,3 +70,5 @@ class RTDETRTrainer(DetectionTrainer):
             gt_bbox.append(batch['bboxes'][batch_idx == i].to(batch_idx.device))
             gt_class.append(batch['cls'][batch_idx == i].to(device=batch_idx.device, dtype=torch.long))
         return batch
+
+

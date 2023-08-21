@@ -6,3 +6,5 @@ from .prompt import FastSAMPrompt
 from .val import FastSAMValidator
 
 __all__ = 'FastSAMPredictor', 'FastSAM', 'FastSAMPrompt', 'FastSAMValidator'
+
+

@@ -57,3 +57,5 @@ class RTDETRPredictor(BasePredictor):
             (list): A list of transformed imgs.
         """
         return [LetterBox(self.imgsz, auto=False, scaleFill=True)(image=x) for x in im]
+
+

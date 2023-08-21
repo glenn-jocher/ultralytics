@@ -408,3 +408,5 @@ class Predictor(BasePredictor):
                 masks[i] = new_masks[i]
 
         return masks[keep]
+
+

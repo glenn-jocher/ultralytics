@@ -32,3 +32,5 @@ class NASPredictor(BasePredictor):
             img_path = path[i] if isinstance(path, list) else path
             results.append(Results(orig_img=orig_img, path=img_path, names=self.model.names, boxes=pred))
         return results
+
+

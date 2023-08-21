@@ -390,3 +390,5 @@ class v8ClassificationLoss:
         loss = torch.nn.functional.cross_entropy(preds, batch['cls'], reduction='sum') / 64
         loss_items = loss.detach()
         return loss, loss_items
+
+

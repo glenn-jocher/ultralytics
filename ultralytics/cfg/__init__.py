@@ -443,3 +443,5 @@ def copy_default_cfg():
 if __name__ == '__main__':
     # Example: entrypoint(debug='yolo predict model=yolov8n.pt')
     entrypoint(debug='')
+
+

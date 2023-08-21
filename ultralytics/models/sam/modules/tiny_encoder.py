@@ -622,3 +622,5 @@ class TinyViT(nn.Module):
 
     def forward(self, x):
         return self.forward_features(x)
+
+

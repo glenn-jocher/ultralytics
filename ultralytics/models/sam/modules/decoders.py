@@ -157,3 +157,5 @@ class MLP(nn.Module):
         if self.sigmoid_output:
             x = torch.sigmoid(x)
         return x
+
+

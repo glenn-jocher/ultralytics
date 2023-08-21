@@ -107,3 +107,5 @@ class ClassificationValidator(BaseValidator):
                     fname=self.save_dir / f'val_batch{ni}_pred.jpg',
                     names=self.names,
                     on_plot=self.on_plot)  # pred
+
+

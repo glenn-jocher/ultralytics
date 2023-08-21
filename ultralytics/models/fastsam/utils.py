@@ -65,3 +65,5 @@ def bbox_iou(box1, boxes, iou_thres=0.9, image_shape=(640, 640), raw_output=Fals
 
     # return indices of boxes with IoU > thres
     return torch.nonzero(iou > iou_thres).flatten()
+
+

@@ -34,3 +34,5 @@ class YOLO(Model):
                 'trainer': yolo.pose.PoseTrainer,
                 'validator': yolo.pose.PoseValidator,
                 'predictor': yolo.pose.PosePredictor, }, }
+
+

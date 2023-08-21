@@ -53,3 +53,5 @@ class PosePredictor(DetectionPredictor):
                         boxes=pred[:, :6],
                         keypoints=pred_kpts))
         return results
+
+

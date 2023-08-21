@@ -64,3 +64,5 @@ def register_tracker(model, persist):
     """
     model.add_callback('on_predict_start', partial(on_predict_start, persist=persist))
     model.add_callback('on_predict_postprocess_end', on_predict_postprocess_end)
+
+

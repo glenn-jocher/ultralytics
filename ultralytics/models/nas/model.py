@@ -59,3 +59,5 @@ class NAS(Model):
     @property
     def task_map(self):
         return {'detect': {'predictor': NASPredictor, 'validator': NASValidator}}
+
+

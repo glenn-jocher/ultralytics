@@ -359,3 +359,5 @@ class BasePredictor:
         Add callback
         """
         self.callbacks[event].append(func)
+
+

@@ -156,3 +156,5 @@ def build_sam(ckpt='sam_b.pt'):
         raise FileNotFoundError(f'{ckpt} is not a supported sam model. Available models are: \n {sam_model_map.keys()}')
 
     return model_builder(ckpt)
+
+

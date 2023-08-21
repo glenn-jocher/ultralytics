@@ -492,3 +492,5 @@ class AutoBackend(nn.Module):
             url = urlparse(p)  # if url may be Triton inference server
             triton = all([any(s in url.scheme for s in ['http', 'grpc']), url.netloc])
         return types + [triton]
+
+

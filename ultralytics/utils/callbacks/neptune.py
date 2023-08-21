@@ -102,3 +102,5 @@ callbacks = {
     'on_fit_epoch_end': on_fit_epoch_end,
     'on_val_end': on_val_end,
     'on_train_end': on_train_end} if neptune else {}
+
+

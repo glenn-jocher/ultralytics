@@ -398,3 +398,5 @@ def download(url, dir=Path.cwd(), unzip=True, delete=False, curl=False, threads=
     else:
         for u in [url] if isinstance(url, (str, Path)) else url:
             safe_download(url=u, dir=dir, unzip=unzip, delete=delete, curl=curl, retry=retry)
+
+

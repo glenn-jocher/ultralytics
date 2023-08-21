@@ -464,3 +464,5 @@ class Model:
             task_map (dict): The map of model task to mode classes.
         """
         raise NotImplementedError('Please provide task map for your model!')
+
+

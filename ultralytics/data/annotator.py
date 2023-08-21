@@ -48,3 +48,5 @@ def auto_annotate(data, det_model='yolov8x.pt', sam_model='sam_b.pt', device='',
                         continue
                     segment = map(str, segments[i].reshape(-1).tolist())
                     f.write(f'{class_ids[i]} ' + ' '.join(segment) + '\n')
+
+

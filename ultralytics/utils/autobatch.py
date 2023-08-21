@@ -88,3 +88,5 @@ def autobatch(model, imgsz=640, fraction=0.67, batch_size=DEFAULT_CFG.batch):
     except Exception as e:
         LOGGER.warning(f'{prefix}WARNING ⚠️ error detected: {e},  using default batch-size {batch_size}.')
         return batch_size
+
+

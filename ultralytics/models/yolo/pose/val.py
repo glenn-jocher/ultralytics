@@ -213,3 +213,5 @@ class PoseValidator(DetectionValidator):
             except Exception as e:
                 LOGGER.warning(f'pycocotools unable to run: {e}')
         return stats
+
+

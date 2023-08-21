@@ -364,3 +364,5 @@ class ProfileModels:
         print(separator)
         for row in table_rows:
             print(row)
+
+

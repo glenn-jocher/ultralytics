@@ -273,3 +273,5 @@ class SemanticDataset(BaseDataset):
     def __init__(self):
         """Initialize a SemanticDataset object."""
         super().__init__()
+
+

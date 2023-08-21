@@ -210,3 +210,5 @@ def add_integration_callbacks(instance):
         for k, v in x.items():
             if v not in instance.callbacks[k]:  # prevent duplicate callbacks addition
                 instance.callbacks[k].append(v)  # callback[name].append(func)
+
+

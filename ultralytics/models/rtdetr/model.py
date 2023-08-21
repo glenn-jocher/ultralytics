@@ -28,3 +28,5 @@ class RTDETR(Model):
                 'validator': RTDETRValidator,
                 'trainer': RTDETRTrainer,
                 'model': RTDETRDetectionModel}}
+
+

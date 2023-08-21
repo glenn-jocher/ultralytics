@@ -167,3 +167,5 @@ class Sam(nn.Module):
         padh = self.image_encoder.img_size - h
         padw = self.image_encoder.img_size - w
         return F.pad(x, (0, padw, 0, padh))
+
+
