@@ -229,11 +229,9 @@ def check_det_dataset(dataset, autodownload=True):
         data = next((DATASETS_DIR / new_dir).rglob('*.yaml'))
         extract_dir, autodownload = data.parent, False
 
-
     # Read YAML (optional)
     if isinstance(data, (str, Path)):
         data = yaml_load(data, append_filename=True)  # dictionary
-        print('STEP1\n', data)
 
     # Checks
     for k in 'train', 'val':
@@ -256,15 +254,10 @@ def check_det_dataset(dataset, autodownload=True):
     data['names'] = check_class_names(data['names'])
 
     # Resolve paths
-    print('STEP2\n', data)
     path = Path(extract_dir or data.get('path') or Path(data.get('yaml_file', '')).parent)  # dataset root
-    print('STEP3\n', path)
-
 
     if not path.is_absolute():
         path = (DATASETS_DIR / path).resolve()
-        print('STEP4\n', path)
-
     data['path'] = path  # download scripts
     for k in 'train', 'val', 'test':
         if data.get(k):  # prepend path
@@ -275,11 +268,9 @@ def check_det_dataset(dataset, autodownload=True):
                 data[k] = str(x)
             else:
                 data[k] = [str((path / x).resolve()) for x in data[k]]
-    print('STEP5\n', data)
 
     # Parse YAML
     train, val, test, s = (data.get(x) for x in ('train', 'val', 'test', 'download'))
-    print('STEP6\n', val)
     if val:
         val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
         if not all(x.exists() for x in val):
@@ -304,7 +295,6 @@ def check_det_dataset(dataset, autodownload=True):
             LOGGER.info(f'Dataset download {s}\n')
     check_font('Arial.ttf' if is_ascii(data['names']) else 'Arial.Unicode.ttf')  # download fonts
 
-    print('STEP7\n', data)
     return data  # dictionary
 
 
