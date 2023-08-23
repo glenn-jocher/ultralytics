@@ -118,11 +118,15 @@ venv.bak/
 .spyderproject
 .spyproject
 
+# VSCode project settings
+.vscode/
+
 # Rope project settings
 .ropeproject
 
 # mkdocs documentation
 /site
+mkdocs_github_authors.yaml
 
 # mypy
 .mypy_cache/
@@ -146,6 +150,7 @@ weights/
 *.onnx
 *.engine
 *.mlmodel
+*.mlpackage
 *.torchscript
 *.tflite
 *.h5

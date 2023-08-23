@@ -68,7 +68,7 @@ class AutoBackend(nn.Module):
             | ONNX Runtime          | *.onnx           |
             | ONNX OpenCV DNN       | *.onnx dnn=True  |
             | OpenVINO              | *.xml            |
-            | CoreML                | *.mlmodel        |
+            | CoreML                | *.mlpackage      |
             | TensorRT              | *.engine         |
             | TensorFlow SavedModel | *_saved_model    |
             | TensorFlow GraphDef   | *.pb             |
@@ -414,13 +414,10 @@ class AutoBackend(nn.Module):
                         scale, zero_point = output['quantization']
                         x = (x.astype(np.float32) - zero_point) * scale  # re-scale
                     if x.ndim > 2:  # if task is not classification
-                        # Denormalize xywh with input image size
+                        # Denormalize xywh by image size. See https://github.com/ultralytics/ultralytics/pull/1695
                         # xywh are normalized in TFLite/EdgeTPU to mitigate quantization error of integer models
-                        # See this PR for details: https://github.com/ultralytics/ultralytics/pull/1695
-                        x[:, 0] *= w
-                        x[:, 1] *= h
-                        x[:, 2] *= w
-                        x[:, 3] *= h
+                        x[:, [0, 2]] *= w
+                        x[:, [1, 3]] *= h
                     y.append(x)
             # TF segment fixes: export is reversed vs ONNX export and protos are transposed
             if len(y) == 2:  # segment with (det, proto) output order reversed
@@ -485,8 +482,13 @@ class AutoBackend(nn.Module):
         sf = list(export_formats().Suffix)  # export suffixes
         if not is_url(p, check=False) and not isinstance(p, str):
             check_suffix(p, sf)  # checks
-        url = urlparse(p)  # if url may be Triton inference server
-        types = [s in Path(p).name for s in sf]
+        name = Path(p).name
+        types = [s in name for s in sf]
+        types[5] |= name.endswith('.mlmodel')  # retain support for older Apple CoreML *.mlmodel formats
         types[8] &= not types[9]  # tflite &= not edgetpu
-        triton = not any(types) and all([any(s in url.scheme for s in ['http', 'grpc']), url.netloc])
+        if any(types):
+            triton = False
+        else:
+            url = urlparse(p)  # if url may be Triton inference server
+            triton = all([any(s in url.scheme for s in ['http', 'grpc']), url.netloc])
         return types + [triton]
