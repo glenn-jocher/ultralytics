@@ -26,18 +26,24 @@ TMP = (ROOT / '../tests/tmp').resolve()  # temp directory for test files
 
 def test_model_forward():
     model = YOLO(CFG)
-    model(SOURCE, imgsz=32, augment=True)
+    model(source=None, imgsz=32, augment=True)  # also test no source and augment
 
 
 def test_model_methods():
     model = YOLO(MODEL)
+
+    # Model methods
     model.info(verbose=True, detailed=True)
     model = model.reset_weights()
     model = model.load(MODEL)
     model.to('cpu')
     model.fuse()
+
+    # Model properties
     _ = model.names
     _ = model.device
+    _ = model.transforms
+    _ = model.task_map
 
 
 def test_predict_txt():
@@ -117,7 +123,7 @@ def test_track_stream():
     import yaml
 
     model = YOLO(MODEL)
-    model.predict('https://youtu.be/G17sBkb38XQ', imgsz=96)
+    model.predict('https://youtu.be/G17sBkb38XQ', imgsz=96, save=True)
     model.track('https://ultralytics.com/assets/decelera_portrait_min.mov', imgsz=160, tracker='bytetrack.yaml')
     model.track('https://ultralytics.com/assets/decelera_portrait_min.mov', imgsz=160, tracker='botsort.yaml')
 
@@ -151,7 +157,7 @@ def test_train_pretrained():
 
 def test_export_torchscript():
     model = YOLO(MODEL)
-    f = model.export(format='torchscript')
+    f = model.export(format='torchscript', optimize=True)
     YOLO(f)(SOURCE)  # exported model inference
 
 
@@ -167,7 +173,7 @@ def test_export_openvino():
     YOLO(f)(SOURCE)  # exported model inference
 
 
-def test_export_coreml():  # sourcery skip: move-assign
+def test_export_coreml():
     if not WINDOWS:  # RuntimeError: BlobWriter not loaded with coremltools 7.0 on windows
         model = YOLO(MODEL)
         model.export(format='coreml', nms=True)
@@ -198,7 +204,7 @@ def test_export_paddle(enabled=False):
         model.export(format='paddle')
 
 
-def test_export_ncnn(enabled=False):
+def test_export_ncnn():
     model = YOLO(MODEL)
     f = model.export(format='ncnn')
     YOLO(f)(SOURCE)  # exported model inference
