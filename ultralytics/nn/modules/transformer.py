@@ -22,6 +22,10 @@ class TransformerEncoderLayer(nn.Module):
 
     def __init__(self, c1, cm=2048, num_heads=8, dropout=0.0, act=nn.GELU(), normalize_before=False):
         super().__init__()
+        from ...utils.torch_utils import TORCH_1_9
+        if not TORCH_1_9:
+            raise ModuleNotFoundError(
+                'TransformerEncoderLayer() requires torch>=1.9 to use nn.MultiheadAttention(batch_first=True).')
         self.ma = nn.MultiheadAttention(c1, num_heads, dropout=dropout, batch_first=True)
         # Implementation of Feedforward model
         self.fc1 = nn.Linear(c1, cm)
@@ -93,8 +97,7 @@ class AIFI(TransformerEncoderLayer):
         out_w = grid_w.flatten()[..., None] @ omega[None]
         out_h = grid_h.flatten()[..., None] @ omega[None]
 
-        return torch.concat([torch.sin(out_w), torch.cos(out_w),
-                             torch.sin(out_h), torch.cos(out_h)], axis=1)[None, :, :]
+        return torch.cat([torch.sin(out_w), torch.cos(out_w), torch.sin(out_h), torch.cos(out_h)], 1)[None]
 
 
 class TransformerLayer(nn.Module):
@@ -166,9 +169,11 @@ class MLP(nn.Module):
         return x
 
 
-# From https://github.com/facebookresearch/detectron2/blob/main/detectron2/layers/batch_norm.py # noqa
-# Itself from https://github.com/facebookresearch/ConvNeXt/blob/d1fa8f6fef0a165b27399986cc2bdacc92777e40/models/convnext.py#L119  # noqa
 class LayerNorm2d(nn.Module):
+    """
+    LayerNorm2d module from https://github.com/facebookresearch/detectron2/blob/main/detectron2/layers/batch_norm.py
+    https://github.com/facebookresearch/ConvNeXt/blob/d1fa8f6fef0a165b27399986cc2bdacc92777e40/models/convnext.py#L119
+    """
 
     def __init__(self, num_channels, eps=1e-6):
         super().__init__()
