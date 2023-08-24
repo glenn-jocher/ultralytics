@@ -145,13 +145,13 @@ def test_val():
 
 def test_train_scratch():
     model = YOLO(CFG)
-    model.train(data='coco8.yaml', epochs=2, imgsz=32, cache='disk', batch=-1, close_mosaic=1)
+    model.train(data='coco8.yaml', epochs=2, imgsz=32, cache='disk', batch=-1, close_mosaic=1, name='model')
     model(SOURCE)
 
 
 def test_train_pretrained():
     model = YOLO(WEIGHTS_DIR / 'yolov8n-seg.pt')
-    model.train(data='coco8-seg.yaml', epochs=1, imgsz=32, cache='ram', copy_paste=0.5, mixup=0.5)
+    model.train(data='coco8-seg.yaml', epochs=1, imgsz=32, cache='ram', copy_paste=0.5, mixup=0.5, name=0)
     model(SOURCE)
 
 
@@ -275,7 +275,7 @@ def test_data_utils():
     # from ultralytics.utils.files import WorkingDirectory
     # with WorkingDirectory(ROOT.parent / 'tests'):
 
-    download('https://github.com/ultralytics/hub/raw/master/example_datasets/coco8.zip', unzip=False)
+    download('https://github.com/ultralytics/hub/raw/main/example_datasets/coco8.zip', unzip=False)
     shutil.move('coco8.zip', TMP)
     stats = HUBDatasetStats(TMP / 'coco8.zip', task='detect')
     stats.get_json(save=True)
