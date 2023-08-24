@@ -343,7 +343,7 @@ def check_cls_dataset(dataset: str, split=''):
 
     # Print to console
     for k, v in {'train': train_set, 'val': val_set, 'test': test_set}.items():
-        prefix = f'{colorstr(k)} {v}...'
+        prefix = f'{colorstr(f"{k}:")} {v}...'
         if v is None:
             LOGGER.info(prefix)
         else:
@@ -373,6 +373,7 @@ class HUBDatasetStats:
         autodownload (bool): Attempt to download dataset if not found locally. Default is False.
 
     Example:
+        Download *.zip files from i.e. https://github.com/ultralytics/hub/raw/main/example_datasets/coco8.zip.
         ```python
         from ultralytics.data.utils import HUBDatasetStats
 
