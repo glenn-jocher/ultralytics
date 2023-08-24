@@ -14,7 +14,7 @@ TorchScript             | `torchscript`             | yolov8n.torchscript
 ONNX                    | `onnx`                    | yolov8n.onnx
 OpenVINO                | `openvino`                | yolov8n_openvino_model/
 TensorRT                | `engine`                  | yolov8n.engine
-CoreML                  | `coreml`                  | yolov8n.mlmodel
+CoreML                  | `coreml`                  | yolov8n.mlpackage
 TensorFlow SavedModel   | `saved_model`             | yolov8n_saved_model/
 TensorFlow GraphDef     | `pb`                      | yolov8n.pb
 TensorFlow Lite         | `tflite`                  | yolov8n.tflite
@@ -37,9 +37,8 @@ from tqdm import tqdm
 from ultralytics import YOLO
 from ultralytics.cfg import TASK2DATA, TASK2METRIC
 from ultralytics.engine.exporter import export_formats
-from ultralytics.utils import LINUX, LOGGER, MACOS, ROOT, SETTINGS
+from ultralytics.utils import ASSETS, LINUX, LOGGER, MACOS, SETTINGS
 from ultralytics.utils.checks import check_requirements, check_yolo
-from ultralytics.utils.downloads import download
 from ultralytics.utils.files import file_size
 from ultralytics.utils.torch_utils import select_device
 
@@ -68,6 +67,13 @@ def benchmark(model=Path(SETTINGS['weights_dir']) / 'yolov8n.pt',
     Returns:
         df (pandas.DataFrame): A pandas DataFrame with benchmark results for each format, including file size,
             metric, and inference time.
+
+    Example:
+        ```python
+        from ultralytics.utils.benchmarks import benchmark
+
+        benchmark(model='yolov8n.pt', imgsz=640)
+        ```
     """
 
     import pandas as pd
@@ -106,9 +112,7 @@ def benchmark(model=Path(SETTINGS['weights_dir']) / 'yolov8n.pt',
             assert model.task != 'pose' or i != 7, 'GraphDef Pose inference is not supported'
             assert i not in (9, 10), 'inference not supported'  # Edge TPU and TF.js are unsupported
             assert i != 5 or platform.system() == 'Darwin', 'inference only supported on macOS>=10.13'  # CoreML
-            if not (ROOT / 'assets/bus.jpg').exists():
-                download(url='https://ultralytics.com/images/bus.jpg', dir=ROOT / 'assets')
-            export.predict(ROOT / 'assets/bus.jpg', imgsz=imgsz, device=device, half=half)
+            export.predict(ASSETS / 'bus.jpg', imgsz=imgsz, device=device, half=half)
 
             # Validate
             data = data or TASK2DATA[model.task]  # task to dataset, i.e. coco8.yaml for task=detect
@@ -163,6 +167,13 @@ class ProfileModels:
 
     Methods:
         profile(): Profiles the models and prints the result.
+
+    Example:
+        ```python
+        from ultralytics.utils.benchmarks import ProfileModels
+
+        ProfileModels(['yolov8n.yaml', 'yolov8s.yaml'], imgsz=640).profile()
+        ```
     """
 
     def __init__(self,
@@ -192,7 +203,7 @@ class ProfileModels:
         output = []
         for file in files:
             engine_file = file.with_suffix('.engine')
-            if file.suffix in ('.pt', '.yaml'):
+            if file.suffix in ('.pt', '.yaml', '.yml'):
                 model = YOLO(str(file))
                 model.fuse()  # to report correct params and GFLOPs in model.info()
                 model_info = model.info()
@@ -229,7 +240,7 @@ class ProfileModels:
             if path.is_dir():
                 extensions = ['*.pt', '*.onnx', '*.yaml']
                 files.extend([file for ext in extensions for file in glob.glob(str(path / ext))])
-            elif path.suffix in {'.pt', '.yaml'}:  # add non-existing
+            elif path.suffix in {'.pt', '.yaml', '.yml'}:  # add non-existing
                 files.append(str(path))
             else:
                 files.extend(glob.glob(str(path)))
@@ -251,7 +262,7 @@ class ProfileModels:
             data = clipped_data
         return data
 
-    def profile_tensorrt_model(self, engine_file: str):
+    def profile_tensorrt_model(self, engine_file: str, eps: float = 1e-7):
         if not self.trt or not Path(engine_file).is_file():
             return 0.0, 0.0
 
@@ -268,7 +279,7 @@ class ProfileModels:
             elapsed = time.time() - start_time
 
         # Compute number of runs as higher of min_time or num_timed_runs
-        num_runs = max(round(self.min_time / elapsed * self.num_warmup_runs), self.num_timed_runs * 50)
+        num_runs = max(round(self.min_time / (elapsed + eps) * self.num_warmup_runs), self.num_timed_runs * 50)
 
         # Timed runs
         run_times = []
@@ -279,7 +290,7 @@ class ProfileModels:
         run_times = self.iterative_sigma_clipping(np.array(run_times), sigma=2, max_iters=3)  # sigma clipping
         return np.mean(run_times), np.std(run_times)
 
-    def profile_onnx_model(self, onnx_file: str):
+    def profile_onnx_model(self, onnx_file: str, eps: float = 1e-7):
         check_requirements('onnxruntime')
         import onnxruntime as ort
 
@@ -319,7 +330,7 @@ class ProfileModels:
             elapsed = time.time() - start_time
 
         # Compute number of runs as higher of min_time or num_timed_runs
-        num_runs = max(round(self.min_time / elapsed * self.num_warmup_runs), self.num_timed_runs)
+        num_runs = max(round(self.min_time / (elapsed + eps) * self.num_warmup_runs), self.num_timed_runs)
 
         # Timed runs
         run_times = []
@@ -353,11 +364,3 @@ class ProfileModels:
         print(separator)
         for row in table_rows:
             print(row)
-
-
-if __name__ == '__main__':
-    # Benchmark all export formats
-    benchmark()
-
-    # Profiling models on ONNX and TensorRT
-    ProfileModels(['yolov8n.yaml', 'yolov8s.yaml'])

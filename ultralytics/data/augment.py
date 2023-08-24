@@ -17,8 +17,6 @@ from ultralytics.utils.ops import segment2box
 
 from .utils import polygons2masks, polygons2masks_overlap
 
-POSE_FLIPLR_INDEX = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
-
 
 # TODO: we might need a BaseTransform to make all these augments be compatible with both classification and semantic
 class BaseTransform:
@@ -404,7 +402,7 @@ class RandomPerspective:
             keypoints (ndarray): keypoints, [N, 17, 3].
             M (ndarray): affine matrix.
 
-        Return:
+        Returns:
             new_keypoints (ndarray): keypoints after affine, [N, 17, 3].
         """
         n, nkpt = keypoints.shape[:2]
@@ -636,7 +634,7 @@ class CopyPaste:
 
             result = cv2.flip(im, 1)  # augment segments (flip left-right)
             i = cv2.flip(im_new, 1).astype(bool)
-            im[i] = result[i]  # cv2.imwrite('debug.jpg', im)  # debug
+            im[i] = result[i]
 
         labels['img'] = im
         labels['cls'] = cls

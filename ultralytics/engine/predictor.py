@@ -20,7 +20,7 @@ Usage - formats:
                               yolov8n.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
                               yolov8n_openvino_model     # OpenVINO
                               yolov8n.engine             # TensorRT
-                              yolov8n.mlmodel            # CoreML (macOS-only)
+                              yolov8n.mlpackage          # CoreML (macOS-only)
                               yolov8n_saved_model        # TensorFlow SavedModel
                               yolov8n.pb                 # TensorFlow GraphDef
                               yolov8n.tflite             # TensorFlow Lite
@@ -47,7 +47,7 @@ STREAM_WARNING = """
     WARNING ⚠️ stream/video/webcam/dir predict source will accumulate results in RAM unless `stream=True` is passed,
     causing potential out-of-memory errors for large sources or long-running streams/videos.
 
-    Usage:
+    Example:
         results = model(source=..., stream=True)  # generator of Results objects
         for r in results:
             boxes = r.boxes  # Boxes object for bbox outputs
@@ -138,12 +138,14 @@ class BasePredictor:
         return self.model(im, augment=self.args.augment, visualize=visualize)
 
     def pre_transform(self, im):
-        """Pre-transform input image before inference.
+        """
+        Pre-transform input image before inference.
 
         Args:
             im (List(np.ndarray)): (N, 3, h, w) for tensor, [(h, w, 3) x N] for list.
 
-        Return: A list of transformed imgs.
+        Returns:
+            (list): A list of transformed images.
         """
         same_shapes = all(x.shape == im[0].shape for x in im)
         auto = same_shapes and self.model.pt
@@ -341,8 +343,7 @@ class BasePredictor:
                     h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 else:  # stream
                     fps, w, h = 30, im0.shape[1], im0.shape[0]
-                suffix = '.mp4' if MACOS else '.avi' if WINDOWS else '.avi'
-                fourcc = 'avc1' if MACOS else 'WMV2' if WINDOWS else 'MJPG'
+                suffix, fourcc = ('.mp4', 'avc1') if MACOS else ('.avi', 'WMV2') if WINDOWS else ('.avi', 'MJPG')
                 save_path = str(Path(save_path).with_suffix(suffix))
                 self.vid_writer[idx] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
             self.vid_writer[idx].write(im0)
