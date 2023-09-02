@@ -46,7 +46,7 @@ jobs:
       - name: Install Ultralytics package from conda-forge
         shell: bash
         run: |
-          conda install ultralytics
+          conda install -c conda-forge ultralytics
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
