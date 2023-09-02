@@ -286,13 +286,14 @@ class ThreadingLocked:
         return decorated
 
 
-def yaml_save(file='data.yaml', data=None):
+def yaml_save(file='data.yaml', data=None, header=''):
     """
     Save YAML data to a file.
 
     Args:
         file (str, optional): File name. Default is 'data.yaml'.
         data (dict): Data to save in YAML format.
+        header (str, optional): YAML header to add.
 
     Returns:
         (None): Data is saved to the specified file.
@@ -310,7 +311,9 @@ def yaml_save(file='data.yaml', data=None):
             data[k] = str(v)
 
     # Dump data to file in YAML format
-    with open(file, 'w') as f:
+    with open(file, 'w', errors='ignore', encoding='utf-8') as f:
+        if header:
+            f.write(header)
         yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
 
 
@@ -325,6 +328,7 @@ def yaml_load(file='data.yaml', append_filename=False):
     Returns:
         (dict): YAML data and file name.
     """
+    assert Path(file).suffix in ('.yaml', '.yml'), f'Attempting to load non-YAML file {file} with yaml_load()'
     with open(file, errors='ignore', encoding='utf-8') as f:
         s = f.read()  # string
 
