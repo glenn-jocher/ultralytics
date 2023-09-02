@@ -26,12 +26,11 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from ultralytics.cfg import get_cfg
+from ultralytics.cfg import get_cfg, get_save_dir
 from ultralytics.data.utils import check_cls_dataset, check_det_dataset
 from ultralytics.nn.autobackend import AutoBackend
-from ultralytics.utils import LOGGER, RANK, SETTINGS, TQDM_BAR_FORMAT, callbacks, colorstr, emojis
+from ultralytics.utils import LOGGER, TQDM_BAR_FORMAT, callbacks, colorstr, emojis
 from ultralytics.utils.checks import check_imgsz
-from ultralytics.utils.files import increment_path
 from ultralytics.utils.ops import Profile
 from ultralytics.utils.torch_utils import de_parallel, select_device, smart_inference_mode
 
@@ -71,7 +70,7 @@ class BaseValidator:
 
         Args:
             dataloader (torch.utils.data.DataLoader): Dataloader to be used for validation.
-            save_dir (Path): Directory to save results.
+            save_dir (Path, optional): Directory to save results.
             pbar (tqdm.tqdm): Progress bar for displaying progress.
             args (SimpleNamespace): Configuration for the validator.
             _callbacks (dict): Dictionary to store various callback functions.
@@ -93,12 +92,8 @@ class BaseValidator:
         self.jdict = None
         self.speed = {'preprocess': 0.0, 'inference': 0.0, 'loss': 0.0, 'postprocess': 0.0}
 
-        project = self.args.project or Path(SETTINGS['runs_dir']) / self.args.task
-        name = self.args.name or f'{self.args.mode}'
-        self.save_dir = save_dir or increment_path(Path(project) / name,
-                                                   exist_ok=self.args.exist_ok if RANK in (-1, 0) else True)
+        self.save_dir = save_dir or get_save_dir(self.args)
         (self.save_dir / 'labels' if self.args.save_txt else self.save_dir).mkdir(parents=True, exist_ok=True)
-
         if self.args.conf is None:
             self.args.conf = 0.001  # default conf=0.001
 
@@ -116,12 +111,12 @@ class BaseValidator:
         if self.training:
             self.device = trainer.device
             self.data = trainer.data
-            model = trainer.ema.ema or trainer.model
             self.args.half = self.device.type != 'cpu'  # force FP16 val during training
+            model = trainer.ema.ema or trainer.model
             model = model.half() if self.args.half else model.float()
-            self.model = model
+            # self.model = model
             self.loss = torch.zeros_like(trainer.loss_items, device=trainer.device)
-            self.args.plots = trainer.stopper.possible_stop or (trainer.epoch == trainer.epochs - 1)
+            self.args.plots &= trainer.stopper.possible_stop or (trainer.epoch == trainer.epochs - 1)
             model.eval()
         else:
             callbacks.add_integration_callbacks(self)
@@ -131,7 +126,7 @@ class BaseValidator:
                                 dnn=self.args.dnn,
                                 data=self.args.data,
                                 fp16=self.args.half)
-            self.model = model
+            # self.model = model
             self.device = model.device  # update device
             self.args.half = model.fp16  # update half
             stride, pt, jit, engine = model.stride, model.pt, model.jit, model.engine
@@ -149,7 +144,7 @@ class BaseValidator:
             else:
                 raise FileNotFoundError(emojis(f"Dataset '{self.args.data}' for task={self.args.task} not found ❌"))
 
-            if self.device.type == 'cpu':
+            if self.device.type in ('cpu', 'mps'):
                 self.args.workers = 0  # faster CPU val as time dominated by inference, not dataloading
             if not pt:
                 self.args.rect = False
@@ -302,8 +297,7 @@ class BaseValidator:
 
     def on_plot(self, name, data=None):
         """Registers plots (e.g. to be consumed in callbacks)"""
-        path = Path(name)
-        self.plots[path] = {'data': data, 'timestamp': time.time()}
+        self.plots[Path(name)] = {'data': data, 'timestamp': time.time()}
 
     # TODO: may need to put these following functions into callback
     def plot_val_samples(self, batch, ni):
