@@ -31,14 +31,15 @@ on:
 
 jobs:
   Conda:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -el {0}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ['3.11']
+    defaults:
+      run:
+        shell: bash -el {0}
     steps:
       - uses: conda-incubator/setup-miniconda@v2
         with:
@@ -47,10 +48,9 @@ jobs:
           channels: conda-forge,defaults
           channel-priority: true
           activate-environment: anaconda-client-env
-          # environment-file: etc/example-environment.yml
       - name: Install Libmamba
         run: |
-          # conda install -n base conda-libmamba-solver
+          # conda install conda-libmamba-solver
           conda config --set solver libmamba
       - name: Install Ultralytics package from conda-forge
         run: |
