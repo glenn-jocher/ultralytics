@@ -48,10 +48,6 @@ jobs:
           channel-priority: true
           activate-environment: anaconda-client-env
           # environment-file: etc/example-environment.yml
-      - name: Update Conda
-        run: |
-          conda update conda
-          conda update conda-build
       - name: Install Libmamba
         run: |
           conda install -n base conda-libmamba-solver
