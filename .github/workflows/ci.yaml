@@ -84,7 +84,7 @@ jobs:
           "
       - name: PyTest
         run: |
-          pip install pytest
+          pip install pytest 'coremltools>=7.0.b1'
           git clone https://github.com/ultralytics/ultralytics
           pytest ultralytics/tests
 
