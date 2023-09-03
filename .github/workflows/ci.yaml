@@ -32,6 +32,9 @@ on:
 jobs:
   CondaTests:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       fail-fast: false
       matrix:
@@ -40,10 +43,12 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-          activate-environment: test-environment
-          auto-activate-base: false
+          mamba-version: "*"
+          channels: conda-forge,defaults
+          channel-priority: true
+          activate-environment: anaconda-client-env
+          # environment-file: etc/example-environment.yml
       - name: Install Ultralytics package from conda-forge
-        shell: bash
         run: |
           conda install -c conda-forge ultralytics
       - name: Check environment
@@ -57,14 +62,13 @@ jobs:
           python --version
           conda list
       - name: Test CLI
-        shell: bash -el {0}
         run: |
           yolo predict model=yolov8n.pt imgsz=320
           yolo train model=yolov8n.pt data=coco8.yaml epochs=1 imgsz=32
           yolo val model=yolov8n.pt data=coco8.yaml imgsz=32
           yolo export model=yolov8n.pt format=torchscript imgsz=160
       - name: Test Python
-        shell: python
+        shell: bash -el {0} python
         run: |
           from ultralytics import YOLO
           
