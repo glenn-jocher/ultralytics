@@ -50,7 +50,7 @@ jobs:
           # environment-file: etc/example-environment.yml
       - name: Install Ultralytics package from conda-forge
         run: |
-          conda install -c conda-forge ultralytics
+          conda install -c conda-forge ultralytics pytest
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
