@@ -30,7 +30,7 @@ on:
         type: boolean
 
 jobs:
-  CondaTests:
+  Conda:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,7 +50,7 @@ jobs:
           # environment-file: etc/example-environment.yml
       - name: Install Ultralytics package from conda-forge
         run: |
-          conda install -c conda-forge ultralytics pytest
+          conda install -c conda-forge ultralytics
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
@@ -82,6 +82,11 @@ jobs:
           results = model('https://ultralytics.com/images/bus.jpg')
           results = model.export(format='onnx')
           "
+      - name: PyTest
+        run: |
+          pip install pytest
+          git clone https://github.com/ultralytics/ultralytics
+          pytest ultralytics/tests
 
   HUB:
     if: github.repository == 'ultralytics/ultralytics' && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.hub == 'true'))
