@@ -58,7 +58,7 @@ jobs:
           conda install -c conda-forge ultralytics
       - name: Install pip packages
         run: |
-          pip install pytest # 'coremltools>=7.0.b1' 'openvino-dev>=2023.0'
+          pip install pytest 'coremltools>=7.0.b1' # 'openvino-dev>=2023.0'
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
