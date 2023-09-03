@@ -50,7 +50,7 @@ jobs:
           # environment-file: etc/example-environment.yml
       - name: Install Libmamba
         run: |
-          conda install -n base conda-libmamba-solver
+          # conda install -n base conda-libmamba-solver
           conda config --set solver libmamba
       - name: Install Ultralytics package from conda-forge
         run: |
