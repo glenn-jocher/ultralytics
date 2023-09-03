@@ -42,7 +42,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           activate-environment: test-environment
           auto-activate-base: false
-          channels: conda-forge
       - name: Install Ultralytics package from conda-forge
         shell: bash
         run: |
@@ -58,14 +57,14 @@ jobs:
           python --version
           conda list
       - name: Test CLI
-        shell: bash
+        shell: bash -el {0}
         run: |
           yolo predict model=yolov8n.pt imgsz=320
           yolo train model=yolov8n.pt data=coco8.yaml epochs=1 imgsz=32
           yolo val model=yolov8n.pt data=coco8.yaml imgsz=32
           yolo export model=yolov8n.pt format=torchscript imgsz=160
       - name: Test Python
-        shell: bash
+        shell: python
         run: |
           from ultralytics import YOLO
           
