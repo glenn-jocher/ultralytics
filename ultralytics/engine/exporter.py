@@ -142,9 +142,11 @@ class Exporter:
             overrides (dict, optional): Configuration overrides. Defaults to None.
             _callbacks (list, optional): List of callback functions. Defaults to None.
         """
+        os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'  # avoid protobuf issues
         self.args = get_cfg(cfg, overrides)
         self.callbacks = _callbacks or callbacks.get_default_callbacks()
         callbacks.add_integration_callbacks(self)
+        
 
     @smart_inference_mode()
     def __call__(self, model=None):
