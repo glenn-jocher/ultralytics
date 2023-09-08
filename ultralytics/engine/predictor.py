@@ -121,11 +121,11 @@ class BasePredictor:
             im = np.ascontiguousarray(im)  # contiguous
             im = torch.from_numpy(im)
 
-        img = im.to(self.device)
-        img = img.half() if self.model.fp16 else img.float()  # uint8 to fp16/32
+        im = im.to(self.device)
+        im = im.half() if self.model.fp16 else im.float()  # uint8 to fp16/32
         if not_tensor:
-            img /= 255  # 0 - 255 to 0.0 - 1.0
-        return img
+            im /= 255  # 0 - 255 to 0.0 - 1.0
+        return im
 
     def inference(self, im, *args, **kwargs):
         visualize = increment_path(self.save_dir / Path(self.batch[0][0]).stem,
@@ -143,8 +143,8 @@ class BasePredictor:
             (list): A list of transformed images.
         """
         same_shapes = all(x.shape == im[0].shape for x in im)
-        auto = same_shapes and self.model.pt
-        return [LetterBox(self.imgsz, auto=auto, stride=self.model.stride)(image=x) for x in im]
+        letterbox = LetterBox(self.imgsz, auto=same_shapes and self.model.pt, stride=self.model.stride)
+        return [letterbox(image=x) for x in im]
 
     def write_results(self, idx, results, batch):
         """Write inference results to a file or directory."""

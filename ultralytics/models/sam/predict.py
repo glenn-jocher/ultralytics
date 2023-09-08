@@ -48,11 +48,11 @@ class Predictor(BasePredictor):
             im = np.ascontiguousarray(im)  # contiguous
             im = torch.from_numpy(im)
 
-        img = im.to(self.device)
-        img = img.half() if self.model.fp16 else img.float()  # uint8 to fp16/32
+        im = im.to(self.device)
+        im = im.half() if self.model.fp16 else im.float()  # uint8 to fp16/32
         if not_tensor:
-            img = (img - self.mean) / self.std
-        return img
+            im = (im - self.mean) / self.std
+        return im
 
     def pre_transform(self, im):
         """
@@ -64,8 +64,9 @@ class Predictor(BasePredictor):
         Returns:
             (list): A list of transformed images.
         """
-        assert len(im) == 1, 'SAM model has not supported batch inference yet!'
-        return [LetterBox(self.args.imgsz, auto=False, center=False)(image=x) for x in im]
+        assert len(im) == 1, 'SAM model does not currently support batched inference'
+        letterbox = LetterBox(self.args.imgsz, auto=False, center=False)
+        return [letterbox(image=x) for x in im]
 
     def inference(self, im, bboxes=None, points=None, labels=None, masks=None, multimask_output=False, *args, **kwargs):
         """
@@ -312,10 +313,13 @@ class Predictor(BasePredictor):
         pred_masks, pred_scores = preds[:2]
         pred_bboxes = preds[2] if self.segment_all else None
         names = dict(enumerate(str(i) for i in range(len(pred_masks))))
+
+        if not isinstance(orig_imgs, list):  # input images are a torch.Tensor, not a list
+            orig_imgs = ops.convert_torch2numpy_batch(orig_imgs)
+
         results = []
-        is_list = isinstance(orig_imgs, list)  # input images are a list, not a torch.Tensor
         for i, masks in enumerate([pred_masks]):
-            orig_img = orig_imgs[i] if is_list else orig_imgs
+            orig_img = orig_imgs[i]
             if pred_bboxes is not None:
                 pred_bboxes = ops.scale_boxes(img.shape[2:], pred_bboxes.float(), orig_img.shape, padding=False)
                 cls = torch.arange(len(pred_masks), dtype=torch.int32, device=pred_masks.device)
