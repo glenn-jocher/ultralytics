@@ -42,7 +42,7 @@ class ClassificationValidator(BaseValidator):
         """Initialize confusion matrix, class names, and top-1 and top-5 accuracy."""
         self.names = model.names
         self.nc = len(model.names)
-        self.confusion_matrix = ConfusionMatrix(nc=self.nc, task='classify')
+        self.confusion_matrix = ConfusionMatrix(nc=self.nc, conf=self.args.conf, task='classify')
         self.pred = []
         self.targets = []
 
@@ -70,6 +70,7 @@ class ClassificationValidator(BaseValidator):
                                            on_plot=self.on_plot)
         self.metrics.speed = self.speed
         self.metrics.confusion_matrix = self.confusion_matrix
+        self.metrics.save_dir = self.save_dir
 
     def get_stats(self):
         """Returns a dictionary of metrics obtained by processing targets and predictions."""
