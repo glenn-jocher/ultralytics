@@ -294,7 +294,7 @@ jobs:
       - name: PyTest
         run: |
           git clone https://github.com/ultralytics/ultralytics
-          pytest ultralytics/tests/test_cli.py  # full tests fail due to openvino export failure
+          pytest ultralytics/tests  # full tests fail due to openvino export failure
 
   Summary:
     runs-on: ubuntu-latest
