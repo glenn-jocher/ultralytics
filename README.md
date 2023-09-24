@@ -51,7 +51,7 @@ To request an Enterprise License please complete the form at [Ultralytics Licens
 </div>
 </div>
 
-## Documentation
+## <p align="center">Documentation</p>
 
 See below for a quickstart installation and usage example, and see the [YOLOv8 Docs](https://docs.ultralytics.com) for full documentation on training, validation, prediction and deployment.
 
