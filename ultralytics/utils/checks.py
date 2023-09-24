@@ -9,20 +9,63 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import time
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Optional
 
 import cv2
 import numpy as np
-import pkg_resources as pkg
 import requests
 import torch
 from matplotlib import font_manager
 
-from ultralytics.utils import (ASSETS, AUTOINSTALL, LINUX, LOGGER, ONLINE, ROOT, USER_CONFIG_DIR, ThreadingLocked,
-                               TryExcept, clean_url, colorstr, downloads, emojis, is_colab, is_docker, is_jupyter,
-                               is_kaggle, is_online, is_pip_package, url2file)
+from ultralytics.utils import (ASSETS, AUTOINSTALL, LINUX, LOGGER, ONLINE, ROOT, USER_CONFIG_DIR, SimpleNamespace,
+                               ThreadingLocked, TryExcept, clean_url, colorstr, downloads, emojis, is_colab, is_docker,
+                               is_jupyter, is_kaggle, is_online, is_pip_package, url2file)
+
+
+def parse_requirements(file_path=ROOT.parent / 'requirements.txt'):
+    """
+    Parse a requirements.txt file, ignoring lines that start with '#' and any text after '#'.
+
+    Args:
+        file_path (Path): Path to the requirements.txt file.
+
+    Returns:
+        (List[Dict[str, str]]): List of parsed requirements as dictionaries with `name` and `specifier` keys.
+    """
+
+    requirements = []
+    for line in Path(file_path).read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith('#'):
+            line = line.split('#')[0].strip()  # ignore inline comments
+            match = re.match(r'([a-zA-Z0-9-_]+)([<>!=~]+.*)?', line)
+            if match:
+                requirements.append(SimpleNamespace(name=match[1], specifier=match[2].strip() if match[2] else ''))
+
+    return requirements
+
+
+def parse_version(version='0.0.0') -> tuple:
+    """
+    Convert a version string to a tuple of integers, ignoring any extra non-numeric string attached to the version.
+    This function replaces deprecated 'pkg_resources.parse_version(v)'
+
+    Args:
+        version (str): Version string, i.e. '2.0.1+cpu'
+
+    Returns:
+        (tuple): Tuple of integers representing the numeric part of the version and the extra string, i.e. (2, 0, 1)
+    """
+    try:
+        return tuple(map(int, re.findall(r'\d+', version)[:3]))  # '2.0.1+cpu' -> (2, 0, 1)
+    except Exception as e:
+        LOGGER.warning(f'WARNING ⚠️ failure for parse_version({version}), reverting to deprecated pkg_resources: {e}')
+        import pkg_resources
+        return pkg_resources.parse_version(version).release
 
 
 def is_ascii(s) -> bool:
@@ -121,24 +164,30 @@ def check_version(current: str = '0.0.0',
         # check if current version is between 20.04 (inclusive) and 22.04 (exclusive)
         check_version(current='21.10', required='>20.04,<22.04')
     """
-    current = pkg.parse_version(current)
-    constraints = re.findall(r'([<>!=]{1,2}\s*\d+\.\d+)', required) or [f'>={required}']
+    if not current:  # if current is '' or None
+        LOGGER.warning(f'WARNING ⚠️ invalid check_version({current}, {required}) requested, please check values.')
+        return True
 
+    if not required:  # if required is '' or None
+        return True
+
+    current = parse_version(current)  # '1.2.3' -> (1, 2, 3)
+    constraints = re.findall(r'([<>!=]{1,2}\s*\d+\.\d+)', required) or [f'>={required}']
     result = True
     for constraint in constraints:
-        op, version = re.match(r'([<>!=]{1,2})\s*(\d+\.\d+)', constraint).groups()
-        version = pkg.parse_version(version)
-        if op == '==' and current != version:
+        op, v = re.match(r'([<>!=]{1,2})\s*(\d+\.\d+)', constraint).groups()
+        v = parse_version(v)  # '1.2.3' -> (1, 2, 3)
+        if op == '==' and current != v:
             result = False
-        elif op == '!=' and current == version:
+        elif op == '!=' and current == v:
             result = False
-        elif op == '>=' and not (current >= version):
+        elif op == '>=' and not (current >= v):
             result = False
-        elif op == '<=' and not (current <= version):
+        elif op == '<=' and not (current <= v):
             result = False
-        elif op == '>' and not (current > version):
+        elif op == '>' and not (current > v):
             result = False
-        elif op == '<' and not (current < version):
+        elif op == '<' and not (current < v):
             result = False
     if not result:
         warning_message = f'WARNING ⚠️ {name}{op}{required} is required, but {name}=={current} is currently installed'
@@ -177,7 +226,7 @@ def check_pip_update_available():
         with contextlib.suppress(Exception):
             from ultralytics import __version__
             latest = check_latest_pypi_version()
-            if pkg.parse_version(__version__) < pkg.parse_version(latest):  # update is available
+            if check_version(__version__, f'<{latest}'):  # check if current version is < latest version
                 LOGGER.info(f'New https://pypi.org/project/ultralytics/{latest} available 😃 '
                             f"Update with 'pip install -U ultralytics'")
                 return True
@@ -253,29 +302,25 @@ def check_requirements(requirements=ROOT.parent / 'requirements.txt', exclude=()
         check_requirements(['numpy', 'ultralytics>=8.0.0'])
         ```
     """
+
     prefix = colorstr('red', 'bold', 'requirements:')
     check_python()  # check python version
     check_torchvision()  # check torch-torchvision compatibility
     if isinstance(requirements, Path):  # requirements.txt file
         file = requirements.resolve()
         assert file.exists(), f'{prefix} {file} not found, check failed.'
-        with file.open() as f:
-            requirements = [f'{x.name}{x.specifier}' for x in pkg.parse_requirements(f) if x.name not in exclude]
+        requirements = [f'{x.name}{x.specifier}' for x in parse_requirements(file) if x.name not in exclude]
     elif isinstance(requirements, str):
         requirements = [requirements]
 
     pkgs = []
     for r in requirements:
         r_stripped = r.split('/')[-1].replace('.git', '')  # replace git+https://org/repo.git -> 'repo'
+        match = re.match(r'([a-zA-Z0-9-_]+)([<>!=~]+.*)?', r_stripped)
+        name, required = match[1], match[2].strip() if match[2] else ''
         try:
-            pkg.require(r_stripped)  # exception if requirements not met
-        except pkg.DistributionNotFound:
-            try:  # attempt to import (slower but more accurate)
-                import importlib
-                importlib.import_module(next(pkg.parse_requirements(r_stripped)).name)
-            except ImportError:
-                pkgs.append(r)
-        except pkg.VersionConflict:
+            assert check_version(version(name), required)  # exception if requirements not met
+        except (AssertionError, PackageNotFoundError):
             pkgs.append(r)
 
     s = ' '.join(f'"{x}"' for x in pkgs)  # console string
@@ -428,6 +473,36 @@ def check_yolo(verbose=True, device=''):
 
     select_device(device=device, newline=False)
     LOGGER.info(f'Setup complete ✅ {s}')
+
+
+def collect_system_info():
+    """Collect and print relevant system information including OS, Python, RAM, CPU, and CUDA."""
+
+    import psutil
+
+    from ultralytics.utils import ENVIRONMENT, is_git_dir
+    from ultralytics.utils.torch_utils import get_cpu_info
+
+    ram_info = psutil.virtual_memory().total / (1024 ** 3)  # Convert bytes to GB
+    check_yolo()
+    LOGGER.info(f"\n{'OS':<20}{platform.platform()}\n"
+                f"{'Environment':<20}{ENVIRONMENT}\n"
+                f"{'Python':<20}{sys.version.split()[0]}\n"
+                f"{'Install':<20}{'git' if is_git_dir() else 'pip' if is_pip_package() else 'other'}\n"
+                f"{'RAM':<20}{ram_info:.2f} GB\n"
+                f"{'CPU':<20}{get_cpu_info()}\n"
+                f"{'CUDA':<20}{torch.version.cuda if torch and torch.cuda.is_available() else None}\n")
+
+    if (ROOT.parent / 'requirements.txt').exists():  # git install
+        requirements = parse_requirements()
+    else:  # pip install
+        from pkg_resources import get_distribution
+        requirements = get_distribution('ultralytics').requires()
+
+    for r in requirements:
+        current = version(r.name)
+        is_met = '✅ ' if check_version(current, str(r.specifier)) else '❌ '
+        LOGGER.info(f'{r.name:<20}{is_met}{current}{r.specifier}')
 
 
 def check_amp(model):
