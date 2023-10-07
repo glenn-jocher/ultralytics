@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 import time
-from importlib.metadata import PackageNotFoundError, version
+from importlib import metadata
 from pathlib import Path
 from typing import Optional
 
@@ -26,23 +26,36 @@ from ultralytics.utils import (ASSETS, AUTOINSTALL, LINUX, LOGGER, ONLINE, ROOT,
                                is_jupyter, is_kaggle, is_online, is_pip_package, url2file)
 
 
-def parse_requirements(file_path=ROOT.parent / 'requirements.txt'):
+def parse_requirements(file_path=ROOT.parent / 'requirements.txt', package=''):
     """
     Parse a requirements.txt file, ignoring lines that start with '#' and any text after '#'.
 
     Args:
         file_path (Path): Path to the requirements.txt file.
+        package (str, optional): Python package to use instead of requirements.txt file, i.e. package='ultralytics'.
 
     Returns:
         (List[Dict[str, str]]): List of parsed requirements as dictionaries with `name` and `specifier` keys.
+
+    Example:
+        ```python
+        from ultralytics.utils.checks import parse_requirements
+
+        parse_requirements(package='ultralytics')
+        ```
     """
 
+    if package:
+        requires = [x for x in metadata.distribution(package).requires if 'extra == ' not in x]
+    else:
+        requires = Path(file_path).read_text().splitlines()
+
     requirements = []
-    for line in Path(file_path).read_text().splitlines():
+    for line in requires:
         line = line.strip()
         if line and not line.startswith('#'):
             line = line.split('#')[0].strip()  # ignore inline comments
-            match = re.match(r'([a-zA-Z0-9-_]+)([<>!=~]+.*)?', line)
+            match = re.match(r'([a-zA-Z0-9-_]+)\s*([<>!=~]+.*)?', line)
             if match:
                 requirements.append(SimpleNamespace(name=match[1], specifier=match[2].strip() if match[2] else ''))
 
@@ -63,9 +76,8 @@ def parse_version(version='0.0.0') -> tuple:
     try:
         return tuple(map(int, re.findall(r'\d+', version)[:3]))  # '2.0.1+cpu' -> (2, 0, 1)
     except Exception as e:
-        LOGGER.warning(f'WARNING ⚠️ failure for parse_version({version}), reverting to deprecated pkg_resources: {e}')
-        import pkg_resources
-        return pkg_resources.parse_version(version).release
+        LOGGER.warning(f'WARNING ⚠️ failure for parse_version({version}), returning (0, 0, 0): {e}')
+        return 0, 0, 0
 
 
 def is_ascii(s) -> bool:
@@ -172,8 +184,8 @@ def check_version(current: str = '0.0.0',
     elif not current[0].isdigit():  # current is package name rather than version string, i.e. current='ultralytics'
         try:
             name = current  # assigned package name to 'name' arg
-            current = version(current)  # get version string from package name
-        except PackageNotFoundError:
+            current = metadata.version(current)  # get version string from package name
+        except metadata.PackageNotFoundError:
             if hard:
                 raise ModuleNotFoundError(emojis(f'WARNING ⚠️ {current} package is required but not installed'))
             else:
@@ -329,8 +341,8 @@ def check_requirements(requirements=ROOT.parent / 'requirements.txt', exclude=()
         match = re.match(r'([a-zA-Z0-9-_]+)([<>!=~]+.*)?', r_stripped)
         name, required = match[1], match[2].strip() if match[2] else ''
         try:
-            assert check_version(version(name), required)  # exception if requirements not met
-        except (AssertionError, PackageNotFoundError):
+            assert check_version(metadata.version(name), required)  # exception if requirements not met
+        except (AssertionError, metadata.PackageNotFoundError):
             pkgs.append(r)
 
     s = ' '.join(f'"{x}"' for x in pkgs)  # console string
@@ -419,7 +431,7 @@ def check_file(file, suffix='', download=True, hard=True):
     file = check_yolov5u_filename(file)  # yolov5n -> yolov5nu
     if not file or ('://' not in file and Path(file).exists()):  # exists ('://' check required in Windows Python<3.10)
         return file
-    elif download and file.lower().startswith(('https://', 'http://', 'rtsp://', 'rtmp://')):  # download
+    elif download and file.lower().startswith(('https://', 'http://', 'rtsp://', 'rtmp://', 'tcp://')):  # download
         url = file  # warning: Pathlib turns :// -> :/
         file = url2file(file)  # '%2F' to '/', split https://url.com/file.txt?auth
         if Path(file).exists():
@@ -503,15 +515,13 @@ def collect_system_info():
                 f"{'CPU':<20}{get_cpu_info()}\n"
                 f"{'CUDA':<20}{torch.version.cuda if torch and torch.cuda.is_available() else None}\n")
 
-    if (ROOT.parent / 'requirements.txt').exists():  # git install
-        requirements = parse_requirements()
-    else:  # pip install
-        from pkg_resources import get_distribution
-        requirements = get_distribution('ultralytics').requires()
-
-    for r in requirements:
-        current = version(r.name)
-        is_met = '✅ ' if check_version(current, str(r.specifier)) else '❌ '
+    for r in parse_requirements(package='ultralytics'):
+        try:
+            current = metadata.version(r.name)
+            is_met = '✅ ' if check_version(current, str(r.specifier), hard=True) else '❌ '
+        except metadata.PackageNotFoundError:
+            current = '(not installed)'
+            is_met = '❌ '
         LOGGER.info(f'{r.name:<20}{is_met}{current}{r.specifier}')
 
 
@@ -559,9 +569,8 @@ def check_amp(model):
     except ConnectionError:
         LOGGER.warning(f'{prefix}checks skipped ⚠️, offline and unable to download YOLOv8n. {warning_msg}')
     except (AttributeError, ModuleNotFoundError):
-        LOGGER.warning(
-            f'{prefix}checks skipped ⚠️. Unable to load YOLOv8n due to possible Ultralytics package modifications. {warning_msg}'
-        )
+        LOGGER.warning(f'{prefix}checks skipped ⚠️. '
+                       f'Unable to load YOLOv8n due to possible Ultralytics package modifications. {warning_msg}')
     except AssertionError:
         LOGGER.warning(f'{prefix}checks failed ❌. Anomalies were detected with AMP on your system that may lead to '
                        f'NaN losses or zero-mAP results, so AMP will be disabled during training.')

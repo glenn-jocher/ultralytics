@@ -14,11 +14,11 @@ from torchvision.transforms import ToTensor
 from ultralytics import RTDETR, YOLO
 from ultralytics.cfg import TASK2DATA
 from ultralytics.data.build import load_inference_source
-from ultralytics.utils import ASSETS, DEFAULT_CFG, LINUX, MACOS, ONLINE, ROOT, SETTINGS, WINDOWS, is_dir_writeable
+from ultralytics.utils import (ASSETS, DEFAULT_CFG, DEFAULT_CFG_PATH, LINUX, MACOS, ONLINE, ROOT, WEIGHTS_DIR, WINDOWS,
+                               checks, is_dir_writeable)
 from ultralytics.utils.downloads import download
 from ultralytics.utils.torch_utils import TORCH_1_9
 
-WEIGHTS_DIR = Path(SETTINGS['weights_dir'])
 MODEL = WEIGHTS_DIR / 'path with spaces' / 'yolov8n.pt'  # test spaces in path
 CFG = 'yolov8n.yaml'
 SOURCE = ASSETS / 'bus.jpg'
@@ -260,12 +260,12 @@ def test_predict_callback_and_setup():
 
 def test_results():
     for m in 'yolov8n-pose.pt', 'yolov8n-seg.pt', 'yolov8n.pt', 'yolov8n-cls.pt':
-        results = YOLO(m)([SOURCE, SOURCE], imgsz=160)
+        results = YOLO(WEIGHTS_DIR / m)([SOURCE, SOURCE], imgsz=160)
         for r in results:
             r = r.cpu().numpy()
             r = r.to(device='cpu', dtype=torch.float32)
-            r.save_txt(txt_file='runs/tests/label.txt', save_conf=True)
-            r.save_crop(save_dir='runs/tests/crops/')
+            r.save_txt(txt_file=TMP / 'runs/tests/label.txt', save_conf=True)
+            r.save_crop(save_dir=TMP / 'runs/tests/crops/')
             r.tojson(normalize=True)
             r.plot(pil=True)
             r.plot(conf=True, boxes=True)
@@ -299,14 +299,17 @@ def test_data_converter():
 
     file = 'instances_val2017.json'
     download(f'https://github.com/ultralytics/yolov5/releases/download/v1.0/{file}', dir=TMP)
-    convert_coco(labels_dir=TMP, use_segments=True, use_keypoints=False, cls91to80=True)
+    convert_coco(labels_dir=TMP, save_dir=TMP / 'yolo_labels', use_segments=True, use_keypoints=False, cls91to80=True)
     coco80_to_coco91_class()
 
 
 def test_data_annotator():
     from ultralytics.data.annotator import auto_annotate
 
-    auto_annotate(ASSETS, det_model='yolov8n.pt', sam_model='mobile_sam.pt', output_dir=TMP / 'auto_annotate_labels')
+    auto_annotate(ASSETS,
+                  det_model=WEIGHTS_DIR / 'yolov8n.pt',
+                  sam_model=WEIGHTS_DIR / 'mobile_sam.pt',
+                  output_dir=TMP / 'auto_annotate_labels')
 
 
 def test_events():
@@ -326,6 +329,7 @@ def test_cfg_init():
     with contextlib.suppress(SyntaxError):
         check_dict_alignment({'a': 1}, {'b': 2})
     copy_default_cfg()
+    (Path.cwd() / DEFAULT_CFG_PATH.name.replace('.yaml', '_copy.yaml')).unlink(missing_ok=False)
     [smart_value(x) for x in ['none', 'true', 'false']]
 
 
@@ -339,17 +343,14 @@ def test_utils_init():
 
 
 def test_utils_checks():
-    from ultralytics.utils.checks import (check_imgsz, check_imshow, check_requirements, check_version,
-                                          check_yolov5u_filename, git_describe, print_args)
-
-    check_yolov5u_filename('yolov5n.pt')
-    # check_imshow(warn=True)
-    git_describe(ROOT)
-    check_requirements()  # check requirements.txt
-    check_imgsz([600, 600], max_dim=1)
-    check_imshow()
-    check_version('ultralytics', '8.0.0')
-    print_args()
+    checks.check_yolov5u_filename('yolov5n.pt')
+    checks.git_describe(ROOT)
+    checks.check_requirements()  # check requirements.txt
+    checks.check_imgsz([600, 600], max_dim=1)
+    checks.check_imshow()
+    checks.check_version('ultralytics', '8.0.0')
+    checks.print_args()
+    # checks.check_imshow(warn=True)
 
 
 def test_utils_benchmarks():
@@ -447,3 +448,53 @@ def test_hub():
     export_fmts_hub()
     logout()
     smart_request('GET', 'http://github.com', progress=True)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not ONLINE, reason='environment is offline')
+def test_triton():
+    checks.check_requirements('tritonclient[all]')
+    import subprocess
+    import time
+
+    from tritonclient.http import InferenceServerClient  # noqa
+
+    # Create variables
+    model_name = 'yolo'
+    triton_repo_path = TMP / 'triton_repo'
+    triton_model_path = triton_repo_path / model_name
+
+    # Export model to ONNX
+    f = YOLO(MODEL).export(format='onnx', dynamic=True)
+
+    # Prepare Triton repo
+    (triton_model_path / '1').mkdir(parents=True, exist_ok=True)
+    Path(f).rename(triton_model_path / '1' / 'model.onnx')
+    (triton_model_path / 'config.pdtxt').touch()
+
+    # Define image https://catalog.ngc.nvidia.com/orgs/nvidia/containers/tritonserver
+    tag = 'nvcr.io/nvidia/tritonserver:23.09-py3'  # 6.4 GB
+
+    # Pull the image
+    subprocess.call(f'docker pull {tag}', shell=True)
+
+    # Run the Triton server and capture the container ID
+    container_id = subprocess.check_output(
+        f'docker run -d --rm -v {triton_repo_path}:/models -p 8000:8000 {tag} tritonserver --model-repository=/models',
+        shell=True).decode('utf-8').strip()
+
+    # Wait for the Triton server to start
+    triton_client = InferenceServerClient(url='localhost:8000', verbose=False, ssl=False)
+
+    # Wait until model is ready
+    for _ in range(10):
+        with contextlib.suppress(Exception):
+            assert triton_client.is_model_ready(model_name)
+            break
+        time.sleep(1)
+
+    # Check Triton inference
+    YOLO(f'http://localhost:8000/{model_name}', 'detect')(SOURCE)  # exported model inference
+
+    # Kill and remove the container at the end of the test
+    subprocess.call(f'docker kill {container_id}', shell=True)
