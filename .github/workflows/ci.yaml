@@ -241,7 +241,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   Conda:
-    if: github.repository == 'ultralytics/ultralytics' && (github.event_name == 'schedule' || github.event.inputs.conda == 'true')
+    # if: github.repository == 'ultralytics/ultralytics' && (github.event_name == 'schedule' || github.event.inputs.conda == 'true')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -267,7 +267,7 @@ jobs:
           conda install -c pytorch -c conda-forge pytorch torchvision ultralytics
       - name: Install pip packages
         run: |
-          pip install pytest 'coremltools>=7.0' # 'openvino-dev>=2023.0'
+          pip install pytest 'coremltools>=7.0' 'openvino-dev>=2023.0'
       - name: Check environment
         run: |
           echo "RUNNER_OS is ${{ runner.os }}"
@@ -297,7 +297,7 @@ jobs:
       - name: PyTest
         run: |
           git clone https://github.com/ultralytics/ultralytics
-          pytest ultralytics/tests/test_cli.py  # full tests fail due to openvino export failure
+          pytest ultralytics/tests
 
   Summary:
     runs-on: ubuntu-latest
