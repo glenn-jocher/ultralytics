@@ -26,16 +26,14 @@ def generate_ddp_file(trainer):
     """Generates a DDP file and returns its file name."""
     module, name = f'{trainer.__class__.__module__}.{trainer.__class__.__name__}'.rsplit('.', 1)
 
-    content = f"""# Temporary Ultralytics Multi-GPU training file (should be deleted after use)
-    overrides = {vars(trainer.args)} \nif __name__ == "__main__":
+    content = f'''overrides = {vars(trainer.args)} \nif __name__ == "__main__":
     from {module} import {name}
     from ultralytics.utils import DEFAULT_CFG_DICT
 
     cfg = DEFAULT_CFG_DICT.copy()
     cfg.update(save_dir='')   # handle the extra key 'save_dir'
     trainer = {name}(cfg=cfg, overrides=overrides)
-    _ = trainer.train()
-    """
+    trainer.train()'''
     (USER_CONFIG_DIR / 'DDP').mkdir(exist_ok=True)
     with tempfile.NamedTemporaryFile(prefix='_temp_',
                                      suffix=f'{id(trainer)}.py',
