@@ -56,8 +56,8 @@ def generate_ddp_command(world_size, trainer):
     file = str(Path(sys.argv[0]).resolve())
     print('FILE:', file)
     safe_pattern = re.compile(r'^[a-zA-Z0-9_. /\\-]{1,128}$')  # allowed characters and maximum of 100 characters
-    if not (safe_pattern.match(file) and Path(file).exists() and file.endswith('.py')):  # using CLI
-        file = generate_ddp_file(trainer)
+    # if not (safe_pattern.match(file) and Path(file).exists() and file.endswith('.py')):  # using CLI
+    file = generate_ddp_file(trainer)
     print('SAFE_FILE:', file)
     dist_cmd = 'torch.distributed.run' if TORCH_1_9 else 'torch.distributed.launch'
     port = find_free_network_port()
