@@ -45,7 +45,7 @@ jobs:
         run: |
           from ultralytics import YOLO
           
-          #import sys
+          import sys
           sys.stdout.reconfigure(encoding='utf-8')
           
           # Load a model
