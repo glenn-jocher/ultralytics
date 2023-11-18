@@ -159,6 +159,7 @@ def get_save_dir(args, name=None):
         save_dir = increment_path(Path(project) / name, exist_ok=args.exist_ok if RANK in (-1, 0) else True)
 
     print('GET_SAVE_DIR2', save_dir)
+    LOGGER.info('GET_SAVE_DIR3', 'check mark here: ✅')
     return Path(save_dir)
 
 
