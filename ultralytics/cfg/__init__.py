@@ -148,6 +148,7 @@ def get_cfg(cfg: Union[str, Path, Dict, SimpleNamespace] = DEFAULT_CFG_DICT, ove
 def get_save_dir(args, name=None):
     """Return save_dir as created from train/val/predict arguments."""
 
+    print('GET_SAVE_DIR1', args)
     if getattr(args, 'save_dir', None):
         save_dir = args.save_dir
     else:
@@ -157,6 +158,7 @@ def get_save_dir(args, name=None):
         name = name or args.name or f'{args.mode}'
         save_dir = increment_path(Path(project) / name, exist_ok=args.exist_ok if RANK in (-1, 0) else True)
 
+    print('GET_SAVE_DIR2', save_dir)
     return Path(save_dir)
 
 
