@@ -57,3 +57,6 @@ jobs:
           
           # Train
           results = model.train(data="coco8.yaml", epochs=3, project="中文项目", name="检测项目1")
+          
+          import os
+          os.system('ls')
