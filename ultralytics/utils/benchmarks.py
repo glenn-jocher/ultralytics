@@ -90,6 +90,7 @@ def benchmark(model=WEIGHTS_DIR / 'yolov8n.pt',
             assert i != 9 or LINUX, 'Edge TPU export only supported on Linux'
             if WINDOWS:
                 assert i !=5, 'Windows CoreML export bug (BlobWriter not loaded)'
+                assert i !=11, 'Paddle export not supported on Windows (Segmentation fault)'
             if 6 <= i <= 10:
                 assert MACOS or LINUX, 'TF.js export only supported on macOS and Linux'
             elif i == 11:
