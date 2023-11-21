@@ -88,7 +88,7 @@ def benchmark(model=WEIGHTS_DIR / 'yolov8n.pt',
         emoji, filename = '❌', None  # export defaults
         try:
             assert i != 9 or LINUX, 'Edge TPU export only supported on Linux'
-            if i == 10:
+            if 6 <= i <= 10:
                 assert MACOS or LINUX, 'TF.js export only supported on macOS and Linux'
             elif i == 11:
                 assert sys.version_info < (3, 11), 'PaddlePaddle export only supported on Python<=3.10'
