@@ -7,7 +7,7 @@ import cv2
 from ultralytics.utils.checks import check_imshow, check_requirements
 from ultralytics.utils.plotting import Annotator, colors
 
-check_requirements('shapely>=2.0.0')
+check_requirements("shapely>=2.0.0")
 
 from shapely.geometry import Polygon
 from shapely.geometry.point import Point
@@ -49,14 +49,16 @@ class ObjectCounter:
         # Check if environment support imshow
         self.env_check = check_imshow(warn=True)
 
-    def set_args(self,
-                 classes_names,
-                 reg_pts,
-                 region_color=None,
-                 line_thickness=2,
-                 track_thickness=2,
-                 view_img=False,
-                 draw_tracks=False):
+    def set_args(
+        self,
+        classes_names,
+        reg_pts,
+        region_color=None,
+        line_thickness=2,
+        track_thickness=2,
+        view_img=False,
+        draw_tracks=False,
+    ):
         """
         Configures the Counter's image, bounding box line thickness, and counting region points.
 
@@ -126,9 +128,9 @@ class ObjectCounter:
                 track_line.pop(0)
 
             if self.draw_tracks:
-                self.annotator.draw_centroid_and_tracks(track_line,
-                                                        color=(0, 255, 0),
-                                                        track_thickness=self.track_thickness)
+                self.annotator.draw_centroid_and_tracks(
+                    track_line, color=(0, 255, 0), track_thickness=self.track_thickness
+                )
 
             # Count objects
             if self.counting_region.contains(Point(track_line[-1])):
@@ -139,17 +141,18 @@ class ObjectCounter:
                     else:
                         self.in_counts += 1
 
-        incount_label = 'InCount : ' + f'{self.in_counts}'
-        outcount_label = 'OutCount : ' + f'{self.out_counts}'
+        incount_label = "InCount : " + f"{self.in_counts}"
+        outcount_label = "OutCount : " + f"{self.out_counts}"
         self.annotator.count_labels(in_count=incount_label, out_count=outcount_label)
 
         if self.env_check and self.view_img:
-            cv2.namedWindow('Ultralytics YOLOv8 Object Counter')
-            cv2.setMouseCallback('Ultralytics YOLOv8 Object Counter', self.mouse_event_for_region,
-                                 {'region_points': self.reg_pts})
-            cv2.imshow('Ultralytics YOLOv8 Object Counter', self.im0)
+            cv2.namedWindow("Ultralytics YOLOv8 Object Counter")
+            cv2.setMouseCallback(
+                "Ultralytics YOLOv8 Object Counter", self.mouse_event_for_region, {"region_points": self.reg_pts}
+            )
+            cv2.imshow("Ultralytics YOLOv8 Object Counter", self.im0)
             # Break Window
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 return
 
     def start_counting(self, im0, tracks):
@@ -167,5 +170,5 @@ class ObjectCounter:
         return self.im0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ObjectCounter()

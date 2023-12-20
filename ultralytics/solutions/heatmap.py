@@ -8,7 +8,7 @@ import numpy as np
 from ultralytics.utils.checks import check_imshow, check_requirements
 from ultralytics.utils.plotting import Annotator
 
-check_requirements('shapely>=2.0.0')
+check_requirements("shapely>=2.0.0")
 
 from shapely.geometry import Polygon
 from shapely.geometry.point import Point
@@ -56,17 +56,19 @@ class Heatmap:
         # Check if environment support imshow
         self.env_check = check_imshow(warn=True)
 
-    def set_args(self,
-                 imw,
-                 imh,
-                 colormap=cv2.COLORMAP_JET,
-                 heatmap_alpha=0.5,
-                 view_img=False,
-                 count_reg_pts=None,
-                 count_txt_thickness=2,
-                 count_reg_color=(255, 0, 255),
-                 region_thickness=5,
-                 decay_factor=0.99):
+    def set_args(
+        self,
+        imw,
+        imh,
+        colormap=cv2.COLORMAP_JET,
+        heatmap_alpha=0.5,
+        view_img=False,
+        count_reg_pts=None,
+        count_txt_thickness=2,
+        count_reg_color=(255, 0, 255),
+        region_thickness=5,
+        decay_factor=0.99,
+    ):
         """
         Configures the heatmap colormap, width, height and display parameters.
 
@@ -129,12 +131,12 @@ class Heatmap:
 
         if self.count_reg_pts is not None:
             # Draw counting region
-            self.annotator.draw_region(reg_pts=self.count_reg_pts,
-                                       color=self.count_reg_color,
-                                       thickness=self.region_thickness)
+            self.annotator.draw_region(
+                reg_pts=self.count_reg_pts, color=self.count_reg_color, thickness=self.region_thickness
+            )
 
             for box, cls, track_id in zip(self.boxes, self.clss, self.track_ids):
-                self.heatmap[int(box[1]):int(box[3]), int(box[0]):int(box[2])] += 1
+                self.heatmap[int(box[1]) : int(box[3]), int(box[0]) : int(box[2])] += 1
 
                 # Store tracking hist
                 track_line = self.track_history[track_id]
@@ -152,15 +154,15 @@ class Heatmap:
                             self.in_counts += 1
         else:
             for box, cls in zip(self.boxes, self.clss):
-                self.heatmap[int(box[1]):int(box[3]), int(box[0]):int(box[2])] += 1
+                self.heatmap[int(box[1]) : int(box[3]), int(box[0]) : int(box[2])] += 1
 
         # Normalize, apply colormap to heatmap and combine with original image
         heatmap_normalized = cv2.normalize(self.heatmap, None, 0, 255, cv2.NORM_MINMAX)
         heatmap_colored = cv2.applyColorMap(heatmap_normalized.astype(np.uint8), self.colormap)
 
         if self.count_reg_pts is not None:
-            incount_label = 'InCount : ' + f'{self.in_counts}'
-            outcount_label = 'OutCount : ' + f'{self.out_counts}'
+            incount_label = "InCount : " + f"{self.in_counts}"
+            outcount_label = "OutCount : " + f"{self.out_counts}"
             self.annotator.count_labels(in_count=incount_label, out_count=outcount_label)
 
         im0_with_heatmap = cv2.addWeighted(self.im0, 1 - self.heatmap_alpha, heatmap_colored, self.heatmap_alpha, 0)
@@ -178,11 +180,11 @@ class Heatmap:
         Args:
             im0_with_heatmap (nd array): Original Image with heatmap
         """
-        cv2.imshow('Ultralytics Heatmap', im0_with_heatmap)
+        cv2.imshow("Ultralytics Heatmap", im0_with_heatmap)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     Heatmap()
