@@ -22,7 +22,7 @@ repos:
       - id: check-case-conflict
       # - id: check-yaml
       - id: check-docstring-first
-      - id: double-quote-string-fixer
+      #- id: double-quote-string-fixer
       - id: detect-private-key
 
   - repo: https://github.com/asottile/pyupgrade
@@ -30,18 +30,6 @@ repos:
     hooks:
       - id: pyupgrade
         name: Upgrade code
-
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        name: Sort imports
-
-  - repo: https://github.com/google/yapf
-    rev: v0.40.2
-    hooks:
-      - id: yapf
-        name: YAPF formatting
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.17
@@ -57,11 +45,6 @@ repos:
         exclude: 'docs/.*\.md'
         # exclude: "README.md|README.zh-CN.md|CONTRIBUTING.md"
 
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        name: PEP8
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
@@ -70,6 +53,13 @@ repos:
         exclude: 'docs/de|docs/fr|docs/pt|docs/es|docs/mkdocs_de.yml'
         args:
           - --ignore-words-list=crate,nd,strack,dota,ane,segway,fo,gool,winn
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.8
+    hooks:
+      - id: ruff-format
+        args:
+          - --line-length=120
 
   - repo: https://github.com/PyCQA/docformatter
     rev: v1.7.5
