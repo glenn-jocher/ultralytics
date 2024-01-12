@@ -36,7 +36,7 @@ import torch.cuda
 from ultralytics import YOLO
 from ultralytics.cfg import TASK2DATA, TASK2METRIC
 from ultralytics.engine.exporter import export_formats
-from ultralytics.utils import ASSETS, LINUX, LOGGER, MACOS, TQDM, WEIGHTS_DIR
+from ultralytics.utils import ASSETS, LINUX, LOGGER, MACOS, TQDM, WEIGHTS_DIR, WINDOWS
 from ultralytics.utils.checks import check_requirements, check_yolo
 from ultralytics.utils.files import file_size
 from ultralytics.utils.torch_utils import select_device
@@ -84,9 +84,12 @@ def benchmark(
     for i, (name, format, suffix, cpu, gpu) in export_formats().iterrows():  # index, (name, format, suffix, CPU, GPU)
         emoji, filename = "❌", None  # export defaults
         try:
-            assert i != 9 or LINUX, "Edge TPU export only supported on Linux"
-            if i == 10:
-                assert MACOS or LINUX, "TF.js export only supported on macOS and Linux"
+            assert i != 9 or LINUX, 'Edge TPU export only supported on Linux'
+            if WINDOWS:
+                assert i !=5, 'Windows CoreML export bug (BlobWriter not loaded)'
+                assert i !=11, 'Paddle export not supported on Windows (Segmentation fault)'
+            if 6 <= i <= 10:
+                assert LINUX, 'TF export only supported on Linux'
             elif i == 11:
                 assert sys.version_info < (3, 11), "PaddlePaddle export only supported on Python<=3.10"
             if "cpu" in device.type:
