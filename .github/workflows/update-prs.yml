@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -24,8 +24,11 @@ jobs:
         for PR_NUMBER in $PR_LIST; do
           echo "Merging main into PR #$PR_NUMBER"
 
+          # Fetch the PR branch
+          git fetch origin "refs/pull/$PR_NUMBER/head"
+
           # Checkout the PR branch
-          git checkout "refs/remotes/origin/pull/$PR_NUMBER/head"
+          git checkout "FETCH_HEAD"
 
           # Attempt to merge the main branch into the PR branch
           if git merge origin/main; then
