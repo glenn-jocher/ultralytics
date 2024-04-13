@@ -15,6 +15,11 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Configure Git user
+      run: |
+        git config --global user.name "UltralyticsAssistant"
+        git config --global user.email "web@ultralytics.com"
+
     - name: Merge main into PRs
       run: |
         # Get the list of open pull requests
