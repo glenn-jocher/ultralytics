@@ -5,19 +5,20 @@
 name: Merge main into PRs
 
 on:
-  push:
-    branches:
-      - main
-
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  
 jobs:
   Merge:
-    if: github.repository == 'glenn-jocher/ultralytics'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: main
     - uses: actions/setup-python@v5
       with:
         python-version: "3.11"
@@ -43,8 +44,9 @@ jobs:
         for pr in open_pulls:
             try:                
                 # Attempt to merge main into the PR branch
-                message = f"Merge 'main' into PR #{pr.number} by https://ultralytics.com/actions"
-                merge_commit = repo.merge(pr.head.ref, 'main', commit_message=message)
+                # message = f"Merge 'main' into PR #{pr.number} by https://ultralytics.com/actions"
+                # merge_commit = repo.merge(pr.head.ref, 'main', commit_message=message)
+                pr.update_branch()
                 print(f"Merged 'main' into PR #{pr.number} ({pr.head.ref}) successfully.")
             except Exception as e:
                 print(f"Could not merge 'main' into PR #{pr.number} ({pr.head.ref}): {e}")
