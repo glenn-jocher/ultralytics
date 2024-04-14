@@ -3,7 +3,7 @@ name: Merge main into PRs
 on:
   push:
     branches:
-      - main
+      - main2
 
 jobs:
   merge-main-into-prs:
