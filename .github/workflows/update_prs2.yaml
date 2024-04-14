@@ -13,24 +13,18 @@ jobs:
   Merge:
     if: github.repository == 'glenn-jocher/ultralytics'
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-        ref: ${{ github.head_ref || github.ref }}
         fetch-depth: 0
-
     - uses: actions/setup-python@v5
       with:
         python-version: "3.11"
         cache: "pip" # caching pip dependencies
-
     - name: Install requirements
       run: |
         pip install pygithub
-
     - name: Merge main into PRs
       shell: python
       run: |
@@ -57,4 +51,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
-
