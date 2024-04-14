@@ -18,37 +18,36 @@ jobs:
         ref: ${{ github.head_ref || github.ref }}
         fetch-depth: 0
 
-
     - name: Configure Git user
       run: |
-        git config --global user.name "UltralyticsAssistant"
-        git config --global user.email "web@ultralytics.com"
+        git config --global user.name "glenn-jocher"
+        git config --global user.email "glenn.jocher@ultralytics.com"
 
     - name: Merge main into PRs
       run: |
         # Get the list of open pull requests
-        PR_LIST=$(gh pr list --json number --jq '.[].number')
+        PR_LIST=$(gh pr list --json number,headRefName --jq '.[].number,.headRefName')
 
         # Loop through each pull request
-        for PR_NUMBER in $PR_LIST; do
+        while read -r PR_NUMBER && read -r PR_BRANCH; do
           echo "Merging main into PR #$PR_NUMBER"
 
           # Fetch the PR branch
-          git fetch origin "refs/pull/$PR_NUMBER/head"
+          git fetch origin "$PR_BRANCH"
 
           # Checkout the PR branch
-          git checkout "FETCH_HEAD"
+          git checkout "$PR_BRANCH"
 
           # Attempt to merge the main branch into the PR branch
           if git merge origin/main; then
             # Merge successful, push the changes back to the PR branch
-            git push origin "HEAD:refs/heads/pull/$PR_NUMBER/head"
+            git push origin "HEAD:$PR_BRANCH"
             echo "Merge successful for PR #$PR_NUMBER"
           else
             # Merge failed due to conflicts
             git merge --abort
             echo "Merge failed for PR #$PR_NUMBER due to conflicts"
           fi
-        done
+        done <<< "$PR_LIST"
       env:
         GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
