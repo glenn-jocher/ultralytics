@@ -42,8 +42,9 @@ jobs:
         # Authenticate with the GitHub Token
         g = Github(os.getenv('GITHUB_TOKEN'))
         
-        # Get the repository
-        repo = g.get_repo("YOUR_USERNAME/YOUR_REPOSITORY")
+        # Get the repository dynamically
+        repo_name = os.getenv('GITHUB_REPOSITORY')
+        repo = g.get_repo(repo_name)
         
         # List all open pull requests
         open_pulls = repo.get_pulls(state='open', sort='created')
@@ -55,6 +56,7 @@ jobs:
                 print(f'Merged main into {pr.head.ref} successfully.')
             except Exception as e:
                 print(f'Could not merge main into {pr.head.ref}: {e}')
-
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+
