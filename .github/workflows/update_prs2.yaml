@@ -1,4 +1,4 @@
-name: Merge main into PRs
+name: Merge main into PRs2
 
 on:
   push:
