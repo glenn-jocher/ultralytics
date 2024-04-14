@@ -45,7 +45,7 @@ jobs:
         for pr in open_pulls:
             try:                
                 # Attempt to merge main into the PR branch
-                message = f"Merge branch 'main' into {pr.head.ref} by [Ultralytics Actions](https://ultralytics.com)"
+                message = f"Merge branch 'main' into {pr.head.ref} by https://ultralytics.com/actions"
                 merge_commit = repo.merge(pr.head.ref, 'main', commit_message=message)
                 print(f'Merged main into {pr.head.ref} successfully.')
             except Exception as e:
