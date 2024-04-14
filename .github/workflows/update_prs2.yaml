@@ -47,7 +47,8 @@ jobs:
             if comparison.behind_by > 0:
                 try:
                     # Merge main into the PR branch
-                    pr.update_branch()
+                    success = pr.update_branch()
+                    assert success, "Branch update failed"
                     print(f"Merged 'main' into PR #{pr.number} ({pr.head.ref}) successfully.")
                 except Exception as e:
                     print(f"Could not merge 'main' into PR #{pr.number} ({pr.head.ref}): {e}")
