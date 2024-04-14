@@ -37,8 +37,7 @@ jobs:
         g = Github(os.getenv('GITHUB_TOKEN'))
         
         # Get the repository dynamically
-        repo_name = os.getenv('GITHUB_REPOSITORY')
-        repo = g.get_repo(repo_name)
+        repo = g.get_repo(os.getenv('GITHUB_REPOSITORY'))
         
         # List all open pull requests
         open_pulls = repo.get_pulls(state='open', sort='created')
