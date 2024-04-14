@@ -21,8 +21,8 @@ jobs:
 
     - name: Configure Git user
       run: |
-        git config --global user.name "UltralyticsAssistant"
-        git config --global user.email "web@ultralytics.com"
+        git config --global user.name "glenn-jocher"
+        git config --global user.email "glenn.jocher@ultralytics.com"
 
     - name: Merge main into PRs
       run: |
