@@ -164,6 +164,8 @@ def benchmark(
 
 
 class RF100Benchmark:
+    """Benchmark YOLO model performance across formats for speed and accuracy."""
+
     def __init__(self):
         """Function for initialization of RF100Benchmark."""
         self.ds_names = []
@@ -195,7 +197,7 @@ class RF100Benchmark:
         (shutil.rmtree("rf-100"), os.mkdir("rf-100")) if os.path.exists("rf-100") else os.mkdir("rf-100")
         os.chdir("rf-100")
         os.mkdir("ultralytics-benchmarks")
-        safe_download("https://ultralytics.com/assets/datasets_links.txt")
+        safe_download("https://github.com/ultralytics/assets/releases/download/v0.0.0/datasets_links.txt")
 
         with open(ds_link_txt, "r") as file:
             for line in file:

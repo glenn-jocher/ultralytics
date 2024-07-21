@@ -7,7 +7,7 @@ keywords: Ultralytics, YOLO, configuration, cfg2dict, get_cfg, check_cfg, save_d
 
 !!! Note
 
-    This file is available at [https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/__init__.py](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/__init__.py). If you spot a problem please help fix it by [contributing](https://docs.ultralytics.com/help/contributing/) a [Pull Request](https://github.com/ultralytics/ultralytics/edit/main/ultralytics/cfg/__init__.py) 🛠️. Thank you 🙏!
+    This file is available at [https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/\_\_init\_\_.py](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/__init__.py). If you spot a problem please help fix it by [contributing](https://docs.ultralytics.com/help/contributing/) a [Pull Request](https://github.com/ultralytics/ultralytics/edit/main/ultralytics/cfg/__init__.py) 🛠️. Thank you 🙏!
 
 <br><br>
 
@@ -48,6 +48,10 @@ keywords: Ultralytics, YOLO, configuration, cfg2dict, get_cfg, check_cfg, save_d
 <br><br>
 
 ## ::: ultralytics.cfg.handle_explorer
+
+<br><br>
+
+## ::: ultralytics.cfg.handle_streamlit_inference
 
 <br><br>
 

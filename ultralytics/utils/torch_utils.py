@@ -21,6 +21,7 @@ from ultralytics.utils import (
     DEFAULT_CFG_DICT,
     DEFAULT_CFG_KEYS,
     LOGGER,
+    NUM_THREADS,
     PYTHON_VERSION,
     TORCHVISION_VERSION,
     __version__,
@@ -40,6 +41,7 @@ TORCH_2_0 = check_version(torch.__version__, "2.0.0")
 TORCHVISION_0_10 = check_version(TORCHVISION_VERSION, "0.10.0")
 TORCHVISION_0_11 = check_version(TORCHVISION_VERSION, "0.11.0")
 TORCHVISION_0_13 = check_version(TORCHVISION_VERSION, "0.13.0")
+TORCHVISION_0_18 = check_version(TORCHVISION_VERSION, "0.18.0")
 
 
 @contextmanager
@@ -171,6 +173,8 @@ def select_device(device="", batch=0, newline=False, verbose=True):
         s += f"CPU ({get_cpu_info()})\n"
         arg = "cpu"
 
+    if arg in {"cpu", "mps"}:
+        torch.set_num_threads(NUM_THREADS)  # reset OMP_NUM_THREADS for cpu training
     if verbose:
         LOGGER.info(s if newline else s.rstrip())
     return torch.device(arg)
@@ -271,7 +275,7 @@ def model_info(model, detailed=False, verbose=True, imgsz=640):
     fs = f", {flops:.1f} GFLOPs" if flops else ""
     yaml_file = getattr(model, "yaml_file", "") or getattr(model, "yaml", {}).get("yaml_file", "")
     model_name = Path(yaml_file).stem.replace("yolo", "YOLO") or "Model"
-    LOGGER.info(f"{model_name} summary{fused}: {n_l} layers, {n_p} parameters, {n_g} gradients{fs}")
+    LOGGER.info(f"{model_name} summary{fused}: {n_l:,} layers, {n_p:,} parameters, {n_g:,} gradients{fs}")
     return n_l, n_p, n_g, flops
 
 
@@ -513,6 +517,9 @@ def strip_optimizer(f: Union[str, Path] = "best.pt", s: str = "") -> None:
         for f in Path('path/to/model/checkpoints').rglob('*.pt'):
             strip_optimizer(f)
         ```
+
+    Note:
+        Use `ultralytics.nn.torch_safe_load` for missing modules with `x = torch_safe_load(f)[0]`
     """
     try:
         x = torch.load(f, map_location=torch.device("cpu"))
