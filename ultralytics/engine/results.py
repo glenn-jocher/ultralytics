@@ -21,7 +21,7 @@ from ultralytics.utils.torch_utils import smart_inference_mode
 class BaseTensor(SimpleClass):
     """
     Base tensor class with additional methods for easy manipulation and device handling.
-        
+
     Attributes:
         data (torch.Tensor | np.ndarray): Prediction data such as bounding boxes, masks, or keypoints.
         orig_shape (Tuple[int, int]): Original shape of the image, typically in the format (height, width).
@@ -117,7 +117,7 @@ class BaseTensor(SimpleClass):
 
         Returns:
             (BaseTensor): A new BaseTensor instance with the data moved to GPU memory if it's not already a
-            numpy array, otherwise returns self.
+                numpy array, otherwise returns self.
 
         Examples:
             >>> import torch
@@ -135,8 +135,8 @@ class BaseTensor(SimpleClass):
         Return a copy of the tensor with the specified device and dtype.
 
         Args:
-            *args: Variable length argument list to be passed to torch.Tensor.to().
-            **kwargs: Arbitrary keyword arguments to be passed to torch.Tensor.to().
+            *args (Any): Variable length argument list to be passed to torch.Tensor.to().
+            **kwargs (Any): Arbitrary keyword arguments to be passed to torch.Tensor.to().
 
         Returns:
             (BaseTensor): A new BaseTensor instance with the data moved to the specified device and/or dtype.
@@ -292,7 +292,7 @@ class Results(SimpleClass):
 
         Returns:
             (int): The number of detections, determined by the length of the first non-empty attribute
-            (boxes, masks, probs, keypoints, or obb).
+                (boxes, masks, probs, keypoints, or obb).
 
         Examples:
             >>> results = Results(orig_img, path, names, boxes=torch.rand(5, 4))
@@ -340,8 +340,8 @@ class Results(SimpleClass):
 
         Args:
             fn (str): The name of the function to apply.
-            *args: Variable length argument list to pass to the function.
-            **kwargs: Arbitrary keyword arguments to pass to the function.
+            *args (Any): Variable length argument list to pass to the function.
+            **kwargs (Any): Arbitrary keyword arguments to pass to the function.
 
         Returns:
             (Results): A new Results object with attributes modified by the applied function.
@@ -415,8 +415,8 @@ class Results(SimpleClass):
         Moves all tensors in the Results object to the specified device and dtype.
 
         Args:
-            *args: Variable length argument list to be passed to torch.Tensor.to().
-            **kwargs: Arbitrary keyword arguments to be passed to torch.Tensor.to().
+            *args (Any): Variable length argument list to be passed to torch.Tensor.to().
+            **kwargs (Any): Arbitrary keyword arguments to be passed to torch.Tensor.to().
 
         Returns:
             (Results): A new Results object with all tensors moved to the specified device and dtype.
@@ -513,11 +513,11 @@ class Results(SimpleClass):
             if im_gpu is None:
                 img = LetterBox(pred_masks.shape[1:])(image=annotator.result())
                 im_gpu = (
-                    torch.as_tensor(img, dtype=torch.float16, device=pred_masks.data.device)
-                    .permute(2, 0, 1)
-                    .flip(0)
-                    .contiguous()
-                    / 255
+                        torch.as_tensor(img, dtype=torch.float16, device=pred_masks.data.device)
+                        .permute(2, 0, 1)
+                        .flip(0)
+                        .contiguous()
+                        / 255
                 )
             idx = pred_boxes.cls if pred_boxes else range(len(pred_masks))
             annotator.masks(pred_masks.data, colors=[colors(x, True) for x in idx], im_gpu=im_gpu)
@@ -560,8 +560,8 @@ class Results(SimpleClass):
         visualize the model's predictions directly.
 
         Args:
-            *args: Variable length argument list to be passed to the `plot()` method.
-            **kwargs: Arbitrary keyword arguments to be passed to the `plot()` method.
+            *args (Any): Variable length argument list to be passed to the `plot()` method.
+            **kwargs (Any): Arbitrary keyword arguments to be passed to the `plot()` method.
 
         Examples:
             >>> results = model('path/to/image.jpg')
@@ -581,8 +581,8 @@ class Results(SimpleClass):
         Args:
             filename (str | Path | None): The filename to save the annotated image. If None, a default filename
                 is generated based on the original image path.
-            *args: Variable length argument list to be passed to the `plot` method.
-            **kwargs: Arbitrary keyword arguments to be passed to the `plot` method.
+            *args (Any): Variable length argument list to be passed to the `plot` method.
+            **kwargs (Any): Arbitrary keyword arguments to be passed to the `plot` method.
 
         Examples:
             >>> results = model('path/to/image.jpg')
@@ -606,7 +606,7 @@ class Results(SimpleClass):
 
         Returns:
             (str): A formatted string containing a summary of the results. For detection tasks, it includes the
-            number of detections per class. For classification tasks, it includes the top 5 class probabilities.
+                number of detections per class. For classification tasks, it includes the top 5 class probabilities.
 
         Examples:
             >>> results = model('path/to/image.jpg')
@@ -980,10 +980,9 @@ class Boxes(BaseTensor):
         Convert bounding boxes from [x1, y1, x2, y2] format to [x, y, width, height] format.
 
         Returns:
-            (torch.Tensor | numpy.ndarray): Boxes in [x, y, width, height] format, where:
-                x, y are the coordinates of the top-left corner of the bounding box
-                width, height are the dimensions of the bounding box
-            The shape of the returned tensor is (N, 4), where N is the number of boxes.
+            (torch.Tensor | numpy.ndarray): Boxes in [x, y, width, height] format, where x, y are the coordinates of
+                the top-left corner of the bounding box, width, height are the dimensions of the bounding box and the
+                shape of the returned tensor is (N, 4), where N is the number of boxes.
 
         Examples:
             >>> boxes = Boxes(torch.tensor([[100, 50, 150, 100], [200, 150, 300, 250]]), orig_shape=(480, 640))
@@ -1490,7 +1489,7 @@ class OBB(BaseTensor):
         Returns boxes in [x_center, y_center, width, height, rotation] format.
 
         Returns:
-            (torch.Tensor | numpy.ndarray): A tensor or numpy array containing the oriented bounding boxes with format 
+            (torch.Tensor | numpy.ndarray): A tensor or numpy array containing the oriented bounding boxes with format
                 [x_center, y_center, width, height, rotation]. The shape is (N, 5) where N is the number of boxes.
 
         Examples:
